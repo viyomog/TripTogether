@@ -4,6 +4,7 @@ import { Mail, Lock, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useGoogleLogin } from '@react-oauth/google';
 import AuthLayout from '../components/Auth/AuthLayout';
 
 const GoogleIcon = () => (
@@ -20,6 +21,28 @@ const LoginPage = () => {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    const handleGoogleSignIn = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            setIsLoading(true);
+            try {
+                console.log('Google Sign-in successful, token response:', tokenResponse.access_token);
+                const response = await axios.post('http://localhost:5000/api/auth/google-sign-in', {
+                    token: tokenResponse.access_token
+                }, { withCredentials: true });
+
+                toast.success('Welcome explorer! Google Sign-in successful.');
+                console.log('Google Login successful:', response.data);
+                navigate('/');
+            } catch (err) {
+                const message = err.response?.data?.message || 'Google Sign-in failed. Please try again.';
+                toast.error(message);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        onError: () => toast.error('Google Sign-in failed. Check your connection or credentials.')
+    });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -69,6 +92,7 @@ const LoginPage = () => {
                 className="google-liquid-btn"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={handleGoogleSignIn}
             >
                 <GoogleIcon /> Continue with Google
             </motion.button>
