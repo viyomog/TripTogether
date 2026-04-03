@@ -98,7 +98,10 @@ const LoginPage = () => {
                         type="password"
                         className="auth-input"
                         placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -111,8 +114,17 @@ const LoginPage = () => {
                     className="auth-btn-glow"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
+                    disabled={isLoading}
+                    style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                    Login
+                    {isLoading ? (
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                        >
+                            <Loader2 size={20} />
+                        </motion.div>
+                    ) : 'Login'}
                 </motion.button>
 
                 <p className="auth-footer">
