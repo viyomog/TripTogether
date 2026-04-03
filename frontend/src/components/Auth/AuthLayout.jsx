@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import '../../styles/Auth.css';
+import logo from '../../assets/logo/logo.png';
 
 const AuthLayout = ({ children, title, subtitle }) => {
   const mouseX = useMotionValue(0);
@@ -14,9 +15,9 @@ const AuthLayout = ({ children, title, subtitle }) => {
     mouseY.set(moveY);
   };
 
-  const springConfig = { damping: 25, stiffness: 150 };
-  const floatX = useSpring(useTransform(mouseX, [-500, 500], [-30, 30]), springConfig);
-  const floatY = useSpring(useTransform(mouseY, [-500, 500], [-30, 30]), springConfig);
+  const springConfig = { damping: 30, stiffness: 100, bounce: 0 };
+  const floatX = useSpring(useTransform(mouseX, [-500, 500], [-20, 20]), springConfig);
+  const floatY = useSpring(useTransform(mouseY, [-500, 500], [-20, 20]), springConfig);
 
   return (
     <div className="auth-container" onMouseMove={handleMouseMove}>
@@ -70,11 +71,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
             whileHover={{ scale: 1.1, rotate: 12 }}
             whileTap={{ scale: 0.9 }}
           >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 17L12 22L22 17" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <img src={logo} alt="Triptogether Logo" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
           </motion.div>
           <motion.h1 
             className="auth-title"
