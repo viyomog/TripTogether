@@ -28,7 +28,7 @@ const LoginPage = () => {
             try {
                 console.log('Google Sign-in successful, token response:', tokenResponse.access_token);
                 const response = await axios.post('http://localhost:5000/api/auth/google-sign-in', {
-                    token: tokenResponse.access_token
+                    googleToken: tokenResponse.access_token
                 }, { withCredentials: true });
 
                 toast.success('Welcome explorer! Google Sign-in successful.');
