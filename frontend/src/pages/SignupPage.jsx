@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import AuthLayout from '../components/Auth/AuthLayout';
@@ -16,6 +16,7 @@ const GoogleIcon = () => (
 );
 
 const SignupPage = () => {
+    const navigate = useNavigate();
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -44,6 +45,7 @@ const SignupPage = () => {
                 },
             });
             console.log('Signup successful:', response.data);
+            navigate('/');
         } catch (err) {
             const message = err.response?.data?.message || 'Something went wrong. Please try again.';
             toast.error(message, {

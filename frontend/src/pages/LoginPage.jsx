@@ -1,7 +1,9 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Mail, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 import AuthLayout from '../components/Auth/AuthLayout';
 
 const GoogleIcon = () => (
@@ -14,8 +16,47 @@ const GoogleIcon = () => (
 );
 
 const LoginPage = () => {
-    const handleSubmit = (e) => {
+    const navigate = useNavigate();
+    const [identifier, setIdentifier] = useState('');
+    const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
+
+        try {
+            const response = await axios.post('http://localhost:5000/api/auth/login', {
+                identifier,
+                password,
+            }, { withCredentials: true });
+
+            toast.success('Welcome explorer! Authentication successful.', {
+                style: {
+                    background: '#1e293b',
+                    color: '#fff',
+                    borderRadius: '14px',
+                },
+                iconTheme: {
+                    primary: '#22c55e',
+                    secondary: '#fff',
+                },
+            });
+            
+            console.log('Login successful:', response.data);
+            navigate('/');
+        } catch (err) {
+            const message = err.response?.data?.message || 'Something went wrong. Please try again.';
+            toast.error(message, {
+                style: {
+                    background: '#1e293b',
+                    color: '#fff',
+                    borderRadius: '14px',
+                },
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -42,9 +83,11 @@ const LoginPage = () => {
                 <div className="input-field-liquid">
                     <Mail className="input-icon-liquid" size={20} />
                     <input
-                        type="email"
+                        type="text"
                         className="auth-input"
-                        placeholder="Email Address"
+                        placeholder="Email Address or Username"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
                         required
                     />
                 </div>
