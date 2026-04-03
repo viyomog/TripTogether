@@ -1,0 +1,277 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --mesh-bg-1: #0f172a;
+  --mesh-bg-2: #1e293b;
+  --mesh-accent-1: #06b6d4;  /* Tropical Teal */
+  --mesh-accent-2: #818cf8;  /* Sky Blue */
+  --mesh-accent-3: #f97316;  /* Sunset Orange */
+  
+  --glass-card-bg: rgba(255, 255, 255, 0.01);
+  --glass-card-border: rgba(255, 255, 255, 0.04);
+  --glass-inner-glow: rgba(255, 255, 255, 0.03);
+  
+  --text-main: #f1f5f9;
+  --text-dim: #94a3b8;
+  --btn-glow: rgba(6, 182, 212, 0.4);
+}
+
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mesh-bg-1);
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
+  position: relative;
+  perspective: 1500px;
+}
+
+/* Mesh Gradient Animated Background */
+.mesh-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.mesh-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  mix-blend-mode: screen;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.mesh-blob-1 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--mesh-accent-1) 0%, transparent 70%);
+  top: -100px;
+  left: -100px;
+}
+
+.mesh-blob-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, var(--mesh-accent-2) 0%, transparent 70%);
+  bottom: -50px;
+  right: -50px;
+}
+
+.mesh-blob-3 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, var(--mesh-accent-3) 0%, transparent 70%);
+  top: 40%;
+  left: 30%;
+  opacity: 0.1;
+}
+
+/* Floating 3D Elements */
+.float-icon {
+  position: absolute;
+  z-index: 5;
+  filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
+  opacity: 0.6;
+}
+
+/* Borderless Glass Card */
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: var(--glass-card-bg);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-radius: 40px;
+  padding: 48px;
+  /* Instead of a border, we use a complex box-shadow for depth */
+  box-shadow: 
+    0 0 0 1px var(--glass-card-border),
+    inset 0 0 20px var(--glass-inner-glow),
+    0 40px 100px -20px rgba(0, 0, 0, 0.6);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  transform-style: preserve-3d;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.auth-logo-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--mesh-accent-1), var(--mesh-accent-2));
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.auth-logo-wrapper::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: inherit;
+  filter: blur(15px);
+  opacity: 0.3;
+  z-index: -1;
+}
+
+.auth-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.auth-subtitle {
+  font-size: 16px;
+  color: var(--text-dim);
+  margin-top: 10px;
+}
+
+/* Liquid Inputs - NO HARSH BORDERS */
+.input-field-liquid {
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 18px;
+  margin-bottom: 24px;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.input-field-liquid:focus-within {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 20px rgba(6, 182, 212, 0.1);
+}
+
+.auth-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 18px 20px 18px 56px;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.input-icon-liquid {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  transition: color 0.3s;
+}
+
+.input-field-liquid:focus-within .input-icon-liquid {
+  color: var(--mesh-accent-1);
+}
+
+/* Branded Google Button - NO BORDERS */
+.google-liquid-btn {
+  background: white !important;
+  color: #000 !important;
+  border: none !important;
+  border-radius: 18px;
+  padding: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.google-liquid-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.divider-liquid {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 32px 0;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.divider-line-liquid {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+/* Glow Sign In Button */
+.auth-btn-glow {
+  background: linear-gradient(135deg, var(--mesh-accent-1), var(--mesh-accent-2));
+  border: none;
+  border-radius: 18px;
+  padding: 18px;
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 30px var(--btn-glow);
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  width: 100%;
+  margin-top: 10px;
+}
+
+.auth-btn-glow:hover {
+  transform: scale(1.02);
+  filter: brightness(1.1);
+  box-shadow: 0 12px 40px var(--btn-glow);
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 32px;
+  color: var(--text-dim);
+  font-size: 15px;
+}
+
+.auth-link {
+  color: var(--mesh-accent-1);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.auth-link:hover {
+  color: var(--mesh-accent-2);
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 32px 24px;
+    border-radius: 0;
+    backdrop-filter: blur(20px);
+    height: 100vh;
+    box-shadow: none;
+    background: var(--mesh-bg-1);
+  }
+}
