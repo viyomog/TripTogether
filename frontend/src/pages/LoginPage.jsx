@@ -1,7 +1,9 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Mail, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Lock, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 import AuthLayout from '../components/Auth/AuthLayout';
 
 const GoogleIcon = () => (
@@ -14,8 +16,45 @@ const GoogleIcon = () => (
 );
 
 const LoginPage = () => {
-    const handleSubmit = (e) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
+
+        try {
+            const response = await axios.post('http://localhost:5000/api/auth/login', {
+                email,
+                password,
+            }, { withCredentials: true });
+
+            toast.success('Welcome explorer! Authentication successful.', {
+                style: {
+                    background: '#1e293b',
+                    color: '#fff',
+                    borderRadius: '14px',
+                },
+                iconTheme: {
+                    primary: '#22c55e',
+                    secondary: '#fff',
+                },
+            });
+            
+            console.log('Login successful:', response.data);
+        } catch (err) {
+            const message = err.response?.data?.message || 'Something went wrong. Please try again.';
+            toast.error(message, {
+                style: {
+                    background: '#1e293b',
+                    color: '#fff',
+                    borderRadius: '14px',
+                },
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -28,6 +67,7 @@ const LoginPage = () => {
                 className="google-liquid-btn"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                disabled={isLoading}
             >
                 <GoogleIcon /> Continue with Google
             </motion.button>
@@ -45,7 +85,10 @@ const LoginPage = () => {
                         type="email"
                         className="auth-input"
                         placeholder="Email Address"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -55,7 +98,10 @@ const LoginPage = () => {
                         type="password"
                         className="auth-input"
                         placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -68,8 +114,17 @@ const LoginPage = () => {
                     className="auth-btn-glow"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
+                    disabled={isLoading}
+                    style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                    Login
+                    {isLoading ? (
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                        >
+                            <Loader2 size={20} />
+                        </motion.div>
+                    ) : 'Login'}
                 </motion.button>
 
                 <p className="auth-footer">
