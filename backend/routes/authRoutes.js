@@ -2,8 +2,24 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User.js");
+const axios = require("axios");
 
 const router = express.Router();
+
+const generateUniqueUsername = async (baseName) => {
+  let username;
+  let exists = true;
+
+  baseName = baseName.toLowerCase().replace(/\s+/g, "");
+
+  while (exists) {
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    username = `${baseName}${randomSuffix}`;
+    exists = await User.findOne({ username });
+  }
+
+  return username;
+};
 
 router.post("/signup", async (req, res) => {
   try {
@@ -18,7 +34,7 @@ router.post("/signup", async (req, res) => {
     }
 
     // Generate username from email
-    let username = email.split("@")[0];
+    let username = await generateUniqueUsername(email.split("@")[0]);
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -102,7 +118,7 @@ router.post("/login", async (req, res) => {
     }
 
     // Compare password
-    const isMatch =bcrypt.compare(password, user.password);
+    const isMatch = bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -115,13 +131,13 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: "90d" }
+      { expiresIn: "90d" },
     );
 
     // Send cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, 
+      secure: false,
       sameSite: "strict",
     });
 
@@ -136,13 +152,67 @@ router.post("/login", async (req, res) => {
         username: user.username,
       },
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
       message: "Server error",
     });
+  }
+});
+
+router.post("/google-sign-in", async (req, res) => {
+  const { googleToken } = req.body;
+
+  try {
+    const googleRes = await axios.get(
+      `https://www.googleapis.com/oauth2/v3/userinfo`,
+      {
+        headers: {
+          Authorization: `Bearer ${googleToken}`,
+        },
+      },
+    );
+
+    const { email, name, picture } = googleRes.data;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      const username = await generateUniqueUsername(name);
+      user = new User({ username, email, fullName: name, profilePic: picture });
+      await user.save();
+    }
+
+    const token = jwt.sign(
+      {
+        userID: user._id,
+        email: user.email,
+        username: user.username,
+      },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "15d" },
+    );
+
+    res
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 15 * 24 * 60 * 60 * 1000,
+      })
+      .status(200)
+      .send({
+        success: true,
+        message: "Logged in successfully",
+        user: {
+          username: user.username,
+          _id: user._id,
+        },
+      });
+  } catch (err) {
+    console.error("Error fetching Google user info:", err.message);
+    res.status(401).json({ success: false, message: "Invalid token" });
   }
 });
 
