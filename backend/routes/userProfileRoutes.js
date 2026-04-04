@@ -76,7 +76,7 @@ router.post("/add-interests", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const { travelStyles, travelInterests } = req.body.payload;
+    const { travelStyles, travelInterests } = req.body;
 
     const updateData = {};
 

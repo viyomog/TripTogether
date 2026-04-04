@@ -179,8 +179,8 @@ const ProfilePage = () => {
     setIsSaving(true);
     try {
       const payload = {};
-      if (travelInterests.length > 0) payload.interests = travelInterests;
-      if (travelStyles.length > 0) payload.travelStyle = travelStyles;
+      if (travelInterests.length > 0) payload.travelInterests = travelInterests;
+      if (travelStyles.length > 0) payload.travelStyles = travelStyles;
 
       await axios.post(
         "http://localhost:5000/api/user-profile/add-interests",
@@ -511,8 +511,8 @@ const ProfilePage = () => {
                 <div className="space-y-3">
                   <p className="text-sm text-gray-500">Travel Style</p>
                   <div className="flex flex-wrap gap-2">
-                    {profileData.travelStyle?.length > 0 ? (
-                      profileData.travelStyle.map((style, idx) => (
+                    {profileData.travelStyles?.length > 0 ? (
+                      profileData.travelStyles.map((style, idx) => (
                         <span
                           key={idx}
                           className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium capitalize ${getTravelStyleColor(
