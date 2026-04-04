@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 
+
 const authMiddleware = (req, res, next) => {
-  const token = req.cookies.token;
+  const token = req.cookies.triptogethertoken;
 
   if (!token) {
     return res.status(401).json({ success: false, message: "Unauthorized: No token" });
@@ -17,3 +18,4 @@ const authMiddleware = (req, res, next) => {
 };
 
 module.exports = authMiddleware;
+
