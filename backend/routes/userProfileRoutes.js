@@ -32,4 +32,45 @@ router.get("/get-my-profile", authMiddleware, async (req, res) => {
   }
 });
 
+router.post("/edit-profile", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const { bio, fullName, age, gender } = req.body;
+
+    const updateData = {};
+
+    if (bio !== undefined) updateData.bio = bio;
+    if (fullName !== undefined) updateData.fullName = fullName;
+    if (age !== undefined) updateData.age = age;
+    if (gender !== undefined) updateData.gender = gender;
+
+    // Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true },
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Edit profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
 module.exports = router;
