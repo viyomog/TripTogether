@@ -144,7 +144,7 @@ const ProfilePage = () => {
     setIsSaving(true);
     try {
       const res = await axios.put(
-        "http://localhost:5000/api/user-profile/update-my-profile",
+        "http://localhost:5000/api/user-profile/edit-profile",
         editFormData,
         { withCredentials: true },
       );
