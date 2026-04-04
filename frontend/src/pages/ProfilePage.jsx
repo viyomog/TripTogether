@@ -143,9 +143,15 @@ const ProfilePage = () => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const res = await axios.put(
+      const payload = {};
+      if (editFormData.fullName) payload.fullName = editFormData.fullName;
+      if (editFormData.bio) payload.bio = editFormData.bio;
+      if (editFormData.age) payload.age = editFormData.age;
+      if (editFormData.gender) payload.gender = editFormData.gender;
+
+      const res = await axios.post(
         "http://localhost:5000/api/user-profile/edit-profile",
-        editFormData,
+        payload,
         { withCredentials: true },
       );
       setUser(res.data.user || res.data);
@@ -572,13 +578,13 @@ const ProfilePage = () => {
                     <option value="" className="bg-[#1e293b]">
                       Select Gender
                     </option>
-                    <option value="male" className="bg-[#1e293b]">
+                    <option value="Male" className="bg-[#1e293b]">
                       Male
                     </option>
-                    <option value="female" className="bg-[#1e293b]">
+                    <option value="Female" className="bg-[#1e293b]">
                       Female
                     </option>
-                    <option value="other" className="bg-[#1e293b]">
+                    <option value="Other" className="bg-[#1e293b]">
                       Other
                     </option>
                   </select>
