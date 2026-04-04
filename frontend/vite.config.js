@@ -11,3 +11,4 @@ export default defineConfig({
     },
   },
 })
+// trigger hot restart for tailwind hook 2

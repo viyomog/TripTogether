@@ -42,16 +42,12 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: hsl(var(--background));
+  background-color: #0f172a;
   color: hsl(var(--foreground));
   -webkit-font-smoothing: antialiased;
-  overflow: hidden; /* Prevent body-level scrolling */
 }
 
-#root {
-  height: 100vh;
-  display: flex;
-}
+
 
 /* Auth Layout Split Screen */
 .auth-split-container {
