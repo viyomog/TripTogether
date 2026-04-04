@@ -185,31 +185,25 @@ router.post("/google-sign-in", async (req, res) => {
     }
 
     const token = jwt.sign(
-      {
-        userID: user._id,
-        email: user.email,
-        username: user.username,
-      },
+      { id: user._id, email: user.email },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: "15d" },
+      { expiresIn: "90d" },
     );
 
-    res
-      .cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 15 * 24 * 60 * 60 * 1000,
-      })
-      .status(200)
-      .send({
-        success: true,
-        message: "Logged in successfully",
-        user: {
-          username: user.username,
-          _id: user._id,
-        },
-      });
+    res.cookie("triptogethertoken", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
+    res.status(200).send({
+      success: true,
+      message: "Logged in successfully",
+      user: {
+        username: user.username,
+        _id: user._id,
+      },
+    });
   } catch (err) {
     console.error("Error fetching Google user info:", err.message);
     res.status(401).json({ success: false, message: "Invalid token" });
