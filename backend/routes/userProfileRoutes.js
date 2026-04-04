@@ -8,7 +8,6 @@ const router = express.Router();
 router.get("/get-my-profile", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log(userId);
 
     const user = await User.findById(userId).select("-password");
 
@@ -44,6 +43,45 @@ router.post("/edit-profile", authMiddleware, async (req, res) => {
     if (fullName !== undefined) updateData.fullName = fullName;
     if (age !== undefined) updateData.age = age;
     if (gender !== undefined) updateData.gender = gender;
+
+    // Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true },
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Edit profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+router.post("/add-interests", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const { travelStyles, travelInterests } = req.body;
+
+    const updateData = {};
+
+    if (travelStyles) updateData.travelStyles = travelStyles;
+    if (travelInterests) updateData.travelInterests = travelInterests;
 
     // Update user
     const updatedUser = await User.findByIdAndUpdate(
