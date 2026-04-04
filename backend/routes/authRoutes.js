@@ -210,4 +210,16 @@ router.post("/google-sign-in", async (req, res) => {
   }
 });
 
+router.post("/logout", (req, res) => {
+  res.clearCookie("triptogethertoken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "strict",
+  });
+  res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+});
+
 module.exports = router;

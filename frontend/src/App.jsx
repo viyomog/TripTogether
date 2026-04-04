@@ -1,5 +1,14 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { UserContext } from "./context/userContext";
+
+const ProtectedRoute = ({ children }) => {
+  const { user } = useContext(UserContext);
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 import { AnimatePresence } from "framer-motion";
 import PageTransition from "./components/PageTransition";
 import LoginPage from "./pages/LoginPage";
@@ -123,17 +132,21 @@ const AppRoutes = () => {
         <Route
           path="/profile"
           element={
-            <PageTransition>
-              <ProfilePage />
-            </PageTransition>
+            <ProtectedRoute>
+              <PageTransition>
+                <ProfilePage />
+              </PageTransition>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/myprofile"
           element={
-            <PageTransition>
-              <ProfilePage />
-            </PageTransition>
+            <ProtectedRoute>
+              <PageTransition>
+                <ProfilePage />
+              </PageTransition>
+            </ProtectedRoute>
           }
         />
         <Route
