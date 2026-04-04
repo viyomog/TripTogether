@@ -16,7 +16,7 @@ import {
   Loader2,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+
 import { UserContext } from "../context/userContext";
 import toast from "react-hot-toast";
 
@@ -50,6 +50,10 @@ const ProfilePage = () => {
     age: "",
     gender: "",
   });
+  const [isTravelEditModalOpen, setIsTravelEditModalOpen] = useState(false);
+  const [travelStyles, setTravelStyles] = useState([]);
+  const [travelInterests, setTravelInterests] = useState([]);
+  const [customInterest, setCustomInterest] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const fileInputRef = React.useRef(null);
@@ -99,7 +103,7 @@ const ProfilePage = () => {
       "Beach Vibes",
       "Backpacking",
     ],
-    travelStyle: "mid-range",
+    travelStyle: ["Mid-Range"],
     profilePic: defaultAvatar,
     followers: ["user1", "user2", "user3", "user4"],
     following: ["user5", "user6"],
@@ -116,8 +120,10 @@ const ProfilePage = () => {
 
   const getTravelStyleColor = (style) => {
     switch (style) {
+      case "Budget":
       case "budget":
         return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+      case "Luxury":
       case "luxury":
         return "bg-amber-500/20 text-amber-400 border-amber-500/30";
       default:
@@ -135,6 +141,72 @@ const ProfilePage = () => {
     setIsEditModalOpen(true);
   };
 
+  const handleTravelEditClick = () => {
+    setTravelStyles(profileData.travelStyle || []);
+    setTravelInterests(profileData.travelInterests || []);
+    setCustomInterest("");
+    setIsTravelEditModalOpen(true);
+  };
+
+  const toggleTravelStyle = (style) => {
+    setTravelStyles((prev) =>
+      prev.includes(style) ? prev.filter((s) => s !== style) : [...prev, style],
+    );
+  };
+
+  const toggleInterest = (interest) => {
+    setTravelInterests((prev) =>
+      prev.includes(interest)
+        ? prev.filter((i) => i !== interest)
+        : [...prev, interest],
+    );
+  };
+
+  const addCustomInterest = () => {
+    const trimmed = customInterest.trim();
+    if (
+      trimmed &&
+      !travelInterests.includes(trimmed) &&
+      travelInterests.length < 10
+    ) {
+      setTravelInterests((prev) => [...prev, trimmed]);
+      setCustomInterest("");
+    }
+  };
+
+  const handleTravelEditSubmit = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const payload = {};
+      if (travelInterests.length > 0) payload.interests = travelInterests;
+      if (travelStyles.length > 0) payload.travelStyle = travelStyles;
+
+      await axios.post(
+        "http://localhost:5000/api/user-profile/add-interests",
+        payload,
+        { withCredentials: true },
+      );
+
+      // Refetch profile to get updated data
+      const res = await axios.get(
+        "http://localhost:5000/api/user-profile/get-my-profile",
+        { withCredentials: true },
+      );
+      setUser(res.data.user || res.data);
+      setIsTravelEditModalOpen(false);
+      toast.success("Travel preferences updated!", {
+        style: { background: "#321B22", color: "#fff", borderRadius: "12px" },
+      });
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Failed to update preferences.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleEditChange = (e) => {
     setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
   };
@@ -146,7 +218,7 @@ const ProfilePage = () => {
       const payload = {};
       if (editFormData.fullName) payload.fullName = editFormData.fullName;
       if (editFormData.bio) payload.bio = editFormData.bio;
-      if (editFormData.age) payload.age = editFormData.age;
+      if (editFormData.age) payload.age = Number(editFormData.age);
       if (editFormData.gender) payload.gender = editFormData.gender;
 
       const res = await axios.post(
@@ -419,22 +491,42 @@ const ProfilePage = () => {
 
             {/* Travel Preferences */}
             <div className="p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <Plane size={20} className="text-rose-400" />
-                Travel Preferences
-              </h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Plane size={20} className="text-rose-400" />
+                  Travel Preferences
+                </h3>
+                <motion.button
+                  onClick={handleTravelEditClick}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-rose-400 hover:border-rose-500/30 transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Edit3 size={14} />
+                  Edit
+                </motion.button>
+              </div>
 
               <div className="space-y-6">
                 <div className="space-y-3">
                   <p className="text-sm text-gray-500">Travel Style</p>
-                  <span
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium capitalize ${getTravelStyleColor(
-                      profileData.travelStyle,
-                    )}`}
-                  >
-                    <Star size={14} />
-                    {profileData.travelStyle || "Not specified"}
-                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {profileData.travelStyle?.length > 0 ? (
+                      profileData.travelStyle.map((style, idx) => (
+                        <span
+                          key={idx}
+                          className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium capitalize ${getTravelStyleColor(
+                            style,
+                          )}`}
+                        >
+                          <Star size={14} />
+                          {style}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">Not specified</p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -493,8 +585,6 @@ const ProfilePage = () => {
           </motion.div>
         </motion.div>
       </main>
-
-      <Footer />
 
       {/* Edit Profile Modal */}
       <AnimatePresence>
@@ -593,6 +683,161 @@ const ProfilePage = () => {
                   <button
                     type="button"
                     onClick={() => setIsEditModalOpen(false)}
+                    className="flex-1 py-3 border border-white/10 text-gray-300 font-medium rounded-xl hover:bg-white/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="flex-1 py-3 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold rounded-xl shadow-lg shadow-rose-500/25 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="animate-spin" size={20} />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Travel Preferences Edit Modal */}
+      <AnimatePresence>
+        {isTravelEditModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsTravelEditModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-lg bg-[#1e293b] border border-white/10 rounded-2xl shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                onClick={() => setIsTravelEditModalOpen(false)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-2xl font-bold text-white mb-6">
+                Edit Travel Preferences
+              </h2>
+              <form onSubmit={handleTravelEditSubmit} className="space-y-6">
+                {/* Travel Style Multi-Select */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Travel Style (Select one or more)
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {["Budget", "Mid-Range", "Luxury"].map((style) => (
+                      <button
+                        key={style}
+                        type="button"
+                        onClick={() => toggleTravelStyle(style)}
+                        className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                          travelStyles.includes(style)
+                            ? "bg-rose-500 text-white border-rose-500"
+                            : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10"
+                        }`}
+                      >
+                        {style}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Travel Interests */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Travel Interests (Select or add your own)
+                  </label>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {[
+                      "Hiking",
+                      "Photography",
+                      "Street Food",
+                      "Beach Vibes",
+                      "Cultural Heritage",
+                    ].map((interest) => (
+                      <button
+                        key={interest}
+                        type="button"
+                        onClick={() => toggleInterest(interest)}
+                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                          travelInterests.includes(interest)
+                            ? "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                            : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10"
+                        }`}
+                      >
+                        {interest}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Interest Input */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customInterest}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 15) {
+                          setCustomInterest(e.target.value);
+                        }
+                      }}
+                      placeholder="Add custom interest (max 15 chars)"
+                      className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all text-sm"
+                      maxLength={15}
+                    />
+                    <button
+                      type="button"
+                      onClick={addCustomInterest}
+                      disabled={!customInterest.trim()}
+                      className="px-4 py-2.5 bg-rose-500 text-white rounded-xl hover:bg-rose-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  {/* Selected Interests */}
+                  {travelInterests.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {travelInterests.map((interest, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs text-gray-300"
+                        >
+                          {interest}
+                          <button
+                            type="button"
+                            onClick={() => toggleInterest(interest)}
+                            className="ml-1 text-gray-500 hover:text-rose-400 transition-colors"
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsTravelEditModalOpen(false)}
                     className="flex-1 py-3 border border-white/10 text-gray-300 font-medium rounded-xl hover:bg-white/5 transition-colors"
                   >
                     Cancel
