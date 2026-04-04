@@ -46,7 +46,6 @@ const userSchema = new mongoose.Schema(
     travelStyles: [
       {
         type: String,
-        enum: ["Budget", "Mid-Range", "Luxury"],
       },
     ],
     profilePic: {
