@@ -1,129 +1,573 @@
-import React, { useContext } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import { UserContext } from '../context/userContext';
-import { motion } from 'framer-motion';
+import React, { useContext, useState, useEffect } from "react";
+import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  MapPin,
+  Calendar,
+  Users,
+  Heart,
+  Plane,
+  Edit3,
+  Mail,
+  Briefcase,
+  Star,
+  X,
+  Loader2,
+} from "lucide-react";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import { UserContext } from "../context/userContext";
+import toast from "react-hot-toast";
 
-const defaultAvatar = "https://ui-avatars.com/api/?name=User&background=c084fc&color=fff&size=128";
+const defaultAvatar =
+  "https://ui-avatars.com/api/?name=User&background=f43f5e&color=fff&size=256";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.19, 1, 0.22, 1] },
+  },
+};
 
 const ProfilePage = () => {
-  const { user } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    fullName: "",
+    bio: "",
+    age: "",
+    gender: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const fileInputRef = React.useRef(null);
 
-  // Mock data for frontend design - the backend will plug into this structure later
-  const profileUser = user || {
-    name: "Alex Traveler",
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:5000/api/user-profile/get-my-profile",
+          {
+            withCredentials: true,
+          },
+        );
+        console.log("Profile API Response:", res.data);
+        setUser(res.data.user || res.data);
+      } catch (err) {
+        console.error(
+          "Failed to fetch profile:",
+          err.response?.data || err.message,
+        );
+        toast.error("Could not load profile data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // Fallback data matching the Mongoose schema structure
+  const profileData = user || {
+    _id: "mock-user-id",
+    username: "wanderlust_alex",
     email: "alex@example.com",
-    bio: "Adventure seeker and food lover. Always planning the next escape!",
-    location: "New York, USA",
-    joined: "April 2026",
-    avatar: defaultAvatar
+    fullName: "Alex Traveler",
+    bio: "Adventure seeker and food lover. Always planning the next escape! 🌍✈️",
+    age: 28,
+    gender: "other",
+    location: {
+      city: "New York",
+      country: "USA",
+    },
+    travelInterests: [
+      "Hiking",
+      "Photography",
+      "Street Food",
+      "Cultural Heritage",
+      "Beach Vibes",
+      "Backpacking",
+    ],
+    travelStyle: "mid-range",
+    profilePic: defaultAvatar,
+    followers: ["user1", "user2", "user3", "user4"],
+    following: ["user5", "user6"],
+    createdAt: "2025-04-15T10:00:00.000Z",
   };
 
-  const mockTrips = [
-    { id: 1, destination: "Tokyo, Japan", dates: "Oct 12 - Oct 25, 2026", status: "Upcoming", image: "/tokyo.jpg" },
-    { id: 2, destination: "Paris, France", dates: "Dec 5 - Dec 15, 2026", status: "Planning", image: "/paris.jpg" },
-    { id: 3, destination: "Rome, Italy", dates: "May 10 - May 20, 2025", status: "Past", image: "/rome.jpg" }
-  ];
+  const formatDate = (dateString) => {
+    if (!dateString) return "Recently joined";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+    });
+  };
+
+  const getTravelStyleColor = (style) => {
+    switch (style) {
+      case "budget":
+        return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+      case "luxury":
+        return "bg-amber-500/20 text-amber-400 border-amber-500/30";
+      default:
+        return "bg-rose-500/20 text-rose-400 border-rose-500/30";
+    }
+  };
+
+  const handleEditClick = () => {
+    setEditFormData({
+      fullName: profileData.fullName || "",
+      bio: profileData.bio || "",
+      age: profileData.age || "",
+      gender: profileData.gender || "",
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditChange = (e) => {
+    setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const res = await axios.put(
+        "http://localhost:5000/api/user-profile/update-my-profile",
+        editFormData,
+        { withCredentials: true },
+      );
+      setUser(res.data.user || res.data);
+      setIsEditModalOpen(false);
+      toast.success("Profile updated successfully!", {
+        style: { background: "#321B22", color: "#fff", borderRadius: "12px" },
+      });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update profile.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleProfilePicChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("profilePic", file);
+      try {
+        const res = await axios.put(
+          "http://localhost:5000/api/user-profile/update-profile-pic",
+          formData,
+          {
+            withCredentials: true,
+            headers: { "Content-Type": "multipart/form-data" },
+          },
+        );
+        setUser(res.data.user || res.data);
+        toast.success("Profile picture updated!", {
+          style: {
+            background: "#321B22",
+            color: "#fff",
+            borderRadius: "12px",
+          },
+        });
+      } catch (err) {
+        toast.error("Failed to upload image.");
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-[#0f172a] min-h-screen flex flex-col items-center justify-center text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-500"></div>
+        <p className="mt-4 text-gray-400">Loading your profile...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-[#0f172a] min-h-screen flex flex-col text-gray-200 font-sans">
-      <Navbar />
-      
-      <main className="flex-grow pt-32 pb-16 px-4 sm:px-6 max-w-6xl mx-auto w-full z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Left Sidebar - Profile Card */}
-          <div className="lg:col-span-1 space-y-6">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-xl flex flex-col items-center text-center"
-            >
-              <div className="relative mb-6 group cursor-pointer">
-                <img 
-                  src={profileUser.avatar} 
-                  alt="Profile" 
-                  className="w-32 h-32 rounded-full object-cover border-4 border-gray-800 shadow-lg group-hover:border-[#f43f5e] transition-colors"
-                />
-                <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                  <span className="text-white text-sm font-semibold">Change Photo</span>
-                </div>
-              </div>
-              
-              <h2 className="text-2xl font-bold text-white mb-1">{profileUser.name}</h2>
-              <p className="text-[#f43f5e] font-medium mb-4">{profileUser.email}</p>
-              
-              <p className="text-gray-400 text-sm leading-relaxed mb-6 px-4">
-                {profileUser.bio}
-              </p>
-              
-              <div className="w-full flex justify-between text-sm text-gray-500 border-t border-gray-800 pt-5 mb-4">
-                <span>Location</span>
-                <span className="text-gray-300 font-medium">{profileUser.location}</span>
-              </div>
-              <div className="w-full flex justify-between text-sm text-gray-500 pb-5">
-                <span>Joined</span>
-                <span className="text-gray-300 font-medium">{profileUser.joined}</span>
-              </div>
-              
-              <button className="w-full py-3 mt-2 border-2 border-gray-700 text-gray-300 hover:border-[#f43f5e] hover:text-[#f43f5e] font-bold rounded-lg transition-colors">
-                Edit Profile
-              </button>
-            </motion.div>
-          </div>
+    <div className="bg-[#0f172a] min-h-screen flex flex-col text-gray-200 font-sans overflow-hidden relative">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-rose-500/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-          {/* Right Content - Trips */}
-          <div className="lg:col-span-2 space-y-8">
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <h1 className="text-3xl font-black text-white tracking-tight mb-6">My Journeys</h1>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {mockTrips.map((trip) => (
-                  <div key={trip.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-lg group cursor-pointer hover:border-gray-600 transition-colors">
-                    <div className="h-40 overflow-hidden relative">
-                      <img 
-                        src={trip.image} 
-                        alt={trip.destination} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                      />
-                      <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-xs font-bold px-3 py-1 rounded-full text-white border border-gray-500/30">
-                        {trip.status}
-                      </div>
-                    </div>
-                    <div className="p-5">
-                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#f43f5e] transition-colors">{trip.destination}</h3>
-                      <p className="text-sm text-gray-400 flex items-center gap-2">
-                        {/* Calendar Icon */}
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        {trip.dates}
-                      </p>
-                    </div>
+      <Navbar />
+
+      <main className="flex-grow pt-32 pb-20 px-4 sm:px-6 lg:px-8 z-10 max-w-7xl mx-auto w-full">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+        >
+          {/* Left Column: Profile Card */}
+          <motion.div variants={itemVariants} className="lg:col-span-1">
+            <div className="sticky top-32 space-y-6">
+              {/* Main Profile Card */}
+              <div className="p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col items-center text-center">
+                <motion.div
+                  className="relative mb-6 group cursor-pointer"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <img
+                    src={profileData.profilePic || defaultAvatar}
+                    alt={profileData.fullName}
+                    className="w-36 h-36 rounded-full object-cover border-4 border-white/10 shadow-xl group-hover:border-rose-500/50 transition-colors duration-300"
+                  />
+                  <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                    <Edit3 size={24} className="text-white" />
                   </div>
-                ))}
-                
-                {/* Create New Trip Card */}
-                <div className="bg-gray-800/20 border-2 border-dashed border-gray-700 rounded-2xl flex flex-col items-center justify-center p-8 hover:border-[#f43f5e] hover:bg-gray-800/40 transition-all cursor-pointer group min-h-[16rem]">
-                  <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mb-4 group-hover:bg-[#f43f5e] transition-colors shadow-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
+                </motion.div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleProfilePicChange}
+                />
+
+                <h2 className="text-2xl font-bold text-white mb-1">
+                  {profileData.fullName}
+                </h2>
+                <p className="text-rose-400 font-medium mb-3">
+                  @{profileData.username}
+                </p>
+
+                {profileData.bio && (
+                  <p className="text-gray-400 text-sm leading-relaxed mb-6 px-2">
+                    {profileData.bio}
+                  </p>
+                )}
+
+                <div className="w-full space-y-4 border-t border-white/10 pt-5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500 flex items-center gap-2">
+                      <MapPin size={16} /> Location
+                    </span>
+                    <span className="text-gray-300 font-medium">
+                      {profileData.location?.city
+                        ? `${profileData.location.city}, ${profileData.location.country}`
+                        : "Not specified"}
+                    </span>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-300 group-hover:text-white transition-colors">Plan a New Journey</h3>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500 flex items-center gap-2">
+                      <Calendar size={16} /> Joined
+                    </span>
+                    <span className="text-gray-300 font-medium">
+                      {formatDate(profileData.createdAt)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500 flex items-center gap-2">
+                      <Mail size={16} /> Email
+                    </span>
+                    <span className="text-gray-300 font-medium">
+                      {profileData.email}
+                    </span>
+                  </div>
+                </div>
+
+                <motion.button
+                  onClick={handleEditClick}
+                  className="w-full py-3 mt-6 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold rounded-xl shadow-lg shadow-rose-500/25 transition-all duration-300 flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Edit3 size={18} />
+                  Edit Profile
+                </motion.button>
+              </div>
+
+              {/* Stats Card */}
+              <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="space-y-1">
+                    <p className="text-2xl font-bold text-white">
+                      {profileData.followers?.length || 0}
+                    </p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider">
+                      Followers
+                    </p>
+                  </div>
+                  <div className="space-y-1 border-x border-white/10">
+                    <p className="text-2xl font-bold text-white">
+                      {profileData.following?.length || 0}
+                    </p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider">
+                      Following
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-2xl font-bold text-white">12</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider">
+                      Trips
+                    </p>
+                  </div>
                 </div>
               </div>
-            </motion.div>
-          </div>
-          
-        </div>
+            </div>
+          </motion.div>
+
+          {/* Right Column: Details & Interests */}
+          <motion.div
+            variants={itemVariants}
+            className="lg:col-span-2 space-y-8"
+          >
+            {/* Personal Details */}
+            <div className="p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Users size={20} className="text-rose-400" />
+                Personal Details
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500">Full Name</p>
+                  <p className="text-gray-200 font-medium">
+                    {profileData.fullName}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500">Username</p>
+                  <p className="text-gray-200 font-medium">
+                    @{profileData.username}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500">Age</p>
+                  <p className="text-gray-200 font-medium">
+                    {profileData.age || "Not specified"}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500">Gender</p>
+                  <p className="text-gray-200 font-medium capitalize">
+                    {profileData.gender || "Not specified"}
+                  </p>
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <p className="text-sm text-gray-500">Location</p>
+                  <p className="text-gray-200 font-medium">
+                    {profileData.location?.city
+                      ? `${profileData.location.city}, ${profileData.location.country}`
+                      : "Not specified"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Travel Preferences */}
+            <div className="p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Plane size={20} className="text-rose-400" />
+                Travel Preferences
+              </h3>
+
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-500">Travel Style</p>
+                  <span
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium capitalize ${getTravelStyleColor(
+                      profileData.travelStyle,
+                    )}`}
+                  >
+                    <Star size={14} />
+                    {profileData.travelStyle || "Not specified"}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-500">Travel Interests</p>
+                  <div className="flex flex-wrap gap-3">
+                    {profileData.travelInterests?.length > 0 ? (
+                      profileData.travelInterests.map((interest, idx) => (
+                        <motion.span
+                          key={idx}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-gray-300 text-sm hover:bg-rose-500/20 hover:border-rose-500/30 hover:text-rose-300 transition-all duration-300 cursor-default"
+                        >
+                          {interest}
+                        </motion.span>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">
+                        No interests added yet
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <motion.button
+                className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-rose-500/30 transition-all duration-300 group"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="p-3 rounded-full bg-rose-500/10 text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors duration-300">
+                  <Heart size={24} />
+                </div>
+                <span className="text-gray-300 font-medium group-hover:text-white transition-colors">
+                  Saved Trips
+                </span>
+              </motion.button>
+
+              <motion.button
+                className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-rose-500/30 transition-all duration-300 group"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="p-3 rounded-full bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300">
+                  <Briefcase size={24} />
+                </div>
+                <span className="text-gray-300 font-medium group-hover:text-white transition-colors">
+                  My Journey
+                </span>
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
       </main>
-      
+
       <Footer />
+
+      {/* Edit Profile Modal */}
+      <AnimatePresence>
+        {isEditModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsEditModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-[#1e293b] border border-white/10 rounded-2xl shadow-2xl p-6 relative"
+            >
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-2xl font-bold text-white mb-6">
+                Edit Profile
+              </h2>
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={editFormData.fullName}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Bio
+                  </label>
+                  <textarea
+                    name="bio"
+                    value={editFormData.bio}
+                    onChange={handleEditChange}
+                    rows="3"
+                    maxLength="300"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all resize-none"
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Age
+                  </label>
+                  <input
+                    type="number"
+                    name="age"
+                    value={editFormData.age}
+                    onChange={handleEditChange}
+                    min="1"
+                    max="120"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Gender
+                  </label>
+                  <select
+                    name="gender"
+                    value={editFormData.gender}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all appearance-none"
+                  >
+                    <option value="" className="bg-[#1e293b]">
+                      Select Gender
+                    </option>
+                    <option value="male" className="bg-[#1e293b]">
+                      Male
+                    </option>
+                    <option value="female" className="bg-[#1e293b]">
+                      Female
+                    </option>
+                    <option value="other" className="bg-[#1e293b]">
+                      Other
+                    </option>
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="flex-1 py-3 border border-white/10 text-gray-300 font-medium rounded-xl hover:bg-white/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="flex-1 py-3 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold rounded-xl shadow-lg shadow-rose-500/25 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="animate-spin" size={20} />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
