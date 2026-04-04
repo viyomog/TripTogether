@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   MapPin,
   Calendar,
@@ -41,6 +42,7 @@ const itemVariants = {
 
 const ProfilePage = () => {
   const { user, setUser } = useContext(UserContext);
+  const navigate = useNavigate();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
     fullName: "",
@@ -186,6 +188,24 @@ const ProfilePage = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        "http://localhost:5000/api/auth/logout",
+        {},
+        { withCredentials: true },
+      );
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      setUser(null);
+      toast.success("Logged out successfully!", {
+        style: { background: "#321B22", color: "#fff", borderRadius: "12px" },
+      });
+      navigate("/");
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-[#0f172a] min-h-screen flex flex-col items-center justify-center text-white">
@@ -288,6 +308,29 @@ const ProfilePage = () => {
                 >
                   <Edit3 size={18} />
                   Edit Profile
+                </motion.button>
+                <motion.button
+                  onClick={handleLogout}
+                  className="w-full py-3 mt-3 border-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                  Logout
                 </motion.button>
               </div>
 
