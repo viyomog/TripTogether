@@ -67,7 +67,7 @@ router.post("/signup", async (req, res) => {
     );
 
     // Send cookie
-    res.cookie("token", token, {
+    res.cookie("triptogethertoken", token, {
       httpOnly: true,
       secure: false,
       sameSite: "strict",
@@ -135,7 +135,7 @@ router.post("/login", async (req, res) => {
     );
 
     // Send cookie
-    res.cookie("token", token, {
+    res.cookie("triptogethertoken", token, {
       httpOnly: true,
       secure: false,
       sameSite: "strict",

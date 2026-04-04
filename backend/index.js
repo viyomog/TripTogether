@@ -7,6 +7,7 @@ const colors = require("colors");
 const bodyParser = require("body-parser");
 
 const authRoutes = require('./routes/authRoutes');
+const userProfileRoutes = require('./routes/userProfileRoutes');
 
 const app = express();
 dotenv.config();
@@ -42,6 +43,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/user-profile', userProfileRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`.blue);
