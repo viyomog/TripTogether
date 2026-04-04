@@ -1,280 +1,330 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --mesh-bg-1: #0f172a;
-  --mesh-bg-2: #1e293b;
-  --mesh-accent-1: #06b6d4;  /* Tropical Teal */
-  --mesh-accent-2: #818cf8;  /* Sky Blue */
-  --mesh-accent-3: #f97316;  /* Sunset Orange */
+  /* Lovable HSL Palette */
+  --background: 340 20% 98%;
+  --foreground: 340 30% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 340 30% 15%;
+  --primary: 340 65% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 340 30% 93%;
+  --secondary-foreground: 340 30% 25%;
+  --muted: 340 15% 94%;
+  --muted-foreground: 340 10% 50%;
+  --accent: 340 40% 90%;
+  --accent-foreground: 340 30% 25%;
+  --border: 340 20% 88%;
+  --input: 340 20% 88%;
+  --ring: 340 65% 55%;
+  --radius: 0.75rem;
+
+  /* Custom Rose Utilities */
+  --rose-glow: 340 80% 65%;
+  --rose-soft: 340 40% 95%;
+  --rose-deep: 340 70% 45%;
   
-  --glass-card-bg: rgba(255, 255, 255, 0.01);
-  --glass-card-border: rgba(255, 255, 255, 0.04);
-  --glass-inner-glow: rgba(255, 255, 255, 0.03);
-  
-  --text-main: #f1f5f9;
-  --text-dim: #94a3b8;
-  --btn-glow: rgba(6, 182, 212, 0.4);
+  --rose-gradient: linear-gradient(135deg, hsl(340, 65%, 55%), hsl(340, 80%, 65%));
+  --brand-gradient: linear-gradient(
+    90deg, 
+    hsl(340, 65%, 55%), 
+    hsl(340, 80%, 65%), 
+    hsl(340, 65%, 55%)
+  );
+  --rose-overlay: linear-gradient(135deg, hsla(340, 65%, 55%, 0.7), hsla(340, 80%, 65%, 0.8));
 }
 
-.auth-container {
-  min-height: 100vh;
+* {
+  box-sizing: border-box;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden; /* Prevent body-level scrolling */
+}
+
+#root {
+  height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--mesh-bg-1);
-  font-family: 'Outfit', sans-serif;
-  overflow: hidden;
-  position: relative;
-  perspective: 1500px;
 }
 
-/* Mesh Gradient Animated Background */
-.mesh-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
+/* Auth Layout Split Screen */
+.auth-split-container {
+  display: flex;
+  height: 100vh;
   width: 100%;
-  height: 100%;
-  z-index: 0;
   overflow: hidden;
 }
 
-.mesh-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  mix-blend-mode: screen;
-  opacity: 0.3;
-  pointer-events: none;
-  will-change: transform;
-  transform: translateZ(0);
-}
-
-.mesh-blob-1 {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, var(--mesh-accent-1) 0%, transparent 70%);
-  top: -100px;
-  left: -100px;
-}
-
-.mesh-blob-2 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, var(--mesh-accent-2) 0%, transparent 70%);
-  bottom: -50px;
-  right: -50px;
-}
-
-.mesh-blob-3 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, var(--mesh-accent-3) 0%, transparent 70%);
-  top: 40%;
-  left: 30%;
-  opacity: 0.1;
-}
-
-/* Floating 3D Elements */
-.float-icon {
-  position: absolute;
-  z-index: 5;
-  filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
-  opacity: 0.6;
-}
-
-/* Borderless Glass Card */
-.auth-card {
+.auth-hero-section {
+  display: none;
   position: relative;
-  width: 100%;
-  max-width: 440px;
-  background: var(--glass-card-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 40px;
-  padding: 48px;
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  /* Instead of a border, we use a complex box-shadow for depth */
-  box-shadow: 
-    0 0 0 1px var(--glass-card-border),
-    inset 0 0 20px var(--glass-inner-glow),
-    0 40px 100px -20px rgba(0, 0, 0, 0.6);
-  z-index: 10;
+  width: 55%; 
+  background-size: cover;
+  background-position: center;
+}
+
+@media (min-width: 1024px) {
+  .auth-hero-section {
+    display: block;
+  }
+}
+
+.auth-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--rose-overlay);
   display: flex;
   flex-direction: column;
-  transform-style: preserve-3d;
+  justify-content: center !important; /* Center vertically */
+  align-items: flex-start !important; /* Left placement */
+  padding: 4rem; /* Restored generous horizontal padding */
+  color: white;
+  backdrop-filter: blur(2px);
+  text-align: left !important;
 }
 
-.auth-header {
-  text-align: center;
-  margin-bottom: 40px;
+.auth-hero-title {
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0 0 1rem 0 !important;
+  letter-spacing: -0.03em;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: left !important;
 }
 
-.auth-logo-wrapper {
-  display: inline-flex;
-  align-items: center;
+.auth-hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  opacity: 0.95;
+  max-width: 480px;
+  line-height: 1.6;
+  text-align: left !important;
+  margin: 0 !important;
+}
+
+.hero-icon-container {
+  width: 100%;
+  display: flex;
+  justify-content: center; /* Center the icon horizontally */
+  margin-bottom: 2rem;
+}
+
+.hero-icon-wrapper {
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+}
+
+/* Form Section */
+.auth-form-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  width: 80px;
-  height: 80px;
-  margin-bottom: 24px;
-  position: relative;
+  align-items: center;
+  padding: 1.5rem; /* Balanced padding */
+  background-color: hsl(var(--background));
+  height: 100vh;
+  overflow-y: auto; /* Allow scrolling only if EXTREMELY cramped */
 }
 
+/* Scrollbar styling for small height viewports */
+.auth-form-section::-webkit-scrollbar {
+  width: 6px;
+}
+.auth-form-section::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 10px;
+}
 
+.auth-form-wrapper {
+  width: 100%;
+  max-width: 400px;
+  margin: auto; /* Center in scroll container */
+}
 
-.auth-title {
-  font-size: 32px;
+.auth-header-rose {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.brand-text-gradient {
+  background: var(--brand-gradient);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2rem; 
   font-weight: 700;
-  color: var(--text-main);
-  letter-spacing: -0.5px;
+  margin: 0 0 0.25rem 0;
+  padding-bottom: 0.2em; /* Fix text cropping (especially 'g' and 'p' tails) */
+  line-height: normal;
+  animation: brandShimmer 3s linear infinite;
+  display: inline-block;
+}
+
+.auth-subtitle-rose {
+  color: hsl(var(--muted-foreground));
+  font-size: 1rem;
+  font-weight: 400;
   margin: 0;
 }
 
-.auth-subtitle {
-  font-size: 16px;
-  color: var(--text-dim);
-  margin-top: 10px;
+/* Inputs */
+.input-group-rose {
+  margin-bottom: 0.75rem;
 }
 
-/* Liquid Inputs - NO HARSH BORDERS */
-.input-field-liquid {
+.label-rose {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: hsl(var(--foreground));
+  text-align: left;
+}
+
+.input-container-rose {
   position: relative;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 18px;
-  margin-bottom: 24px;
-  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-.input-field-liquid:focus-within {
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-    0 0 20px rgba(6, 182, 212, 0.1);
-}
-
-.auth-input {
+.input-rose {
   width: 100%;
-  background: transparent;
-  border: none;
-  padding: 18px 20px 18px 56px;
-  color: var(--text-main);
-  font-family: inherit;
-  font-size: 16px;
+  padding: 0.7rem 0.75rem 0.7rem 2.5rem;
+  background-color: white;
+  border: 1.5px solid hsl(var(--border));
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: hsl(var(--foreground));
+  transition: all 0.3s ease;
+}
+
+.input-rose:focus {
   outline: none;
-  border-radius: inherit;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 4px hsla(340, 65%, 55%, 0.1);
 }
 
-.auth-input:-webkit-autofill,
-.auth-input:-webkit-autofill:hover, 
-.auth-input:-webkit-autofill:focus, 
-.auth-input:-webkit-autofill:active {
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: var(--text-main) !important;
-  transition: background-color 5000s ease-in-out 0s;
-  caret-color: white;
-}
-
-.input-icon-liquid {
+.input-icon-rose {
   position: absolute;
-  left: 20px;
+  left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-dim);
-  transition: color 0.3s;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
 }
 
-.input-field-liquid:focus-within .input-icon-liquid {
-  color: var(--mesh-accent-1);
+.password-toggle-rose {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: hsl(var(--muted-foreground));
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem;
+  display: flex;
+  align-items: center;
 }
 
-/* Branded Google Button - NO BORDERS */
-.google-liquid-btn {
-  background: white !important;
-  color: #000 !important;
-  border: none !important;
-  border-radius: 18px;
-  padding: 16px;
-  font-weight: 600;
+/* Buttons */
+.btn-primary-rose {
+  width: 100%;
+  padding: 0.85rem;
+  background: var(--rose-gradient);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 15px hsla(340, 65%, 55%, 0.2);
+}
+
+.btn-primary-rose:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px hsla(340, 65%, 55%, 0.3);
+}
+
+.google-btn-rose {
+  width: 100%;
+  padding: 0.8rem;
+  background-color: white;
+  border: 1.5px solid hsl(var(--border));
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  width: 100%;
+  transition: all 0.2s ease;
 }
 
-.google-liquid-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+.google-btn-rose:hover {
+  background-color: #fdf8f9;
+  border-color: hsl(var(--primary));
 }
 
-.divider-liquid {
+/* Utilities */
+.divider-rose {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin: 32px 0;
-  color: var(--text-dim);
-  font-size: 14px;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.8rem;
 }
 
-.divider-line-liquid {
+.divider-line-rose {
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-color: hsl(var(--border));
 }
 
-/* Glow Sign In Button */
-.auth-btn-glow {
-  background: linear-gradient(135deg, var(--mesh-accent-1), var(--mesh-accent-2));
-  border: none;
-  border-radius: 18px;
-  padding: 18px;
-  color: white;
-  font-size: 17px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 8px 30px var(--btn-glow);
-  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-  width: 100%;
-  margin-top: 10px;
-}
-
-.auth-btn-glow:hover {
-  transform: scale(1.02);
-  filter: brightness(1.1);
-  box-shadow: 0 12px 40px var(--btn-glow);
+.forgot-password-link {
+  display: block;
+  text-align: right;
+  font-size: 0.8rem;
+  color: hsl(var(--primary));
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
 }
 
 .auth-footer {
   text-align: center;
-  margin-top: 32px;
-  color: var(--text-dim);
-  font-size: 15px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: hsl(var(--muted-foreground));
 }
 
 .auth-link {
-  color: var(--mesh-accent-1);
+  color: hsl(var(--primary));
   text-decoration: none;
-  font-weight: 600;
-  transition: color 0.3s;
+  font-weight: 700;
 }
 
-.auth-link:hover {
-  color: var(--mesh-accent-2);
+/* Animations */
+@keyframes brandShimmer {
+  to { background-position: 200% center; }
 }
 
-@media (max-width: 480px) {
-  .auth-card {
-    padding: 32px 24px;
-    border-radius: 0;
-    backdrop-filter: blur(20px);
-    height: 100vh;
-    box-shadow: none;
-    background: var(--mesh-bg-1);
-  }
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }

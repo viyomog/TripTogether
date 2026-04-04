@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -20,32 +20,57 @@ const LoginPage = () => {
     const navigate = useNavigate();
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.3
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 15 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: { duration: 0.4, ease: [0.19, 1, 0.22, 1] }
+        }
+    };
 
     const handleGoogleSignIn = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
             setIsLoading(true);
             try {
-                console.log('Google Sign-in successful, token response:', tokenResponse.access_token);
                 const response = await axios.post('http://localhost:5000/api/auth/google-sign-in', {
                     googleToken: tokenResponse.access_token
                 }, { withCredentials: true });
 
-                toast.success('Welcome explorer! Google Sign-in successful.');
-                console.log('Google Login successful:', response.data);
+                toast.success('Welcome back, adventurer!', {
+                    style: { background: '#321B22', color: '#fff', borderRadius: '12px' }
+                });
                 navigate('/');
             } catch (err) {
-                const message = err.response?.data?.message || 'Google Sign-in failed. Please try again.';
+                const message = err.response?.data?.message || 'Google Sign-in failed.';
                 toast.error(message);
             } finally {
                 setIsLoading(false);
             }
         },
-        onError: () => toast.error('Google Sign-in failed. Check your connection or credentials.')
+        onError: () => toast.error('Google Sign-in failed.')
     });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!identifier || !password) {
+            toast.error('Please fill in all fields.');
+            return;
+        }
         setIsLoading(true);
 
         try {
@@ -54,107 +79,126 @@ const LoginPage = () => {
                 password,
             }, { withCredentials: true });
 
-            toast.success('Welcome explorer! Authentication successful.', {
-                style: {
-                    background: '#1e293b',
-                    color: '#fff',
-                    borderRadius: '14px',
-                },
-                iconTheme: {
-                    primary: '#22c55e',
-                    secondary: '#fff',
-                },
+            toast.success('Welcome back, adventurer!', {
+                style: { background: '#321B22', color: '#fff', borderRadius: '12px' }
             });
-            
-            console.log('Login successful:', response.data);
             navigate('/');
         } catch (err) {
-            const message = err.response?.data?.message || 'Something went wrong. Please try again.';
-            toast.error(message, {
-                style: {
-                    background: '#1e293b',
-                    color: '#fff',
-                    borderRadius: '14px',
-                },
-            });
+            const message = err.response?.data?.message || 'Invalid credentials.';
+            toast.error(message);
         } finally {
             setIsLoading(false);
         }
     };
 
+    const handleForgotPassword = (e) => {
+        e.preventDefault();
+        toast('Password recovery coming soon!', {
+            icon: '🧭',
+            style: { background: '#321B22', color: '#fff', borderRadius: '12px' }
+        });
+    };
+
     return (
-        <AuthLayout
-            title="Start Your Journey"
-            subtitle="Sign in to your global adventure studio"
-        >
-            <motion.button
-                type="button"
-                className="google-liquid-btn"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleGoogleSignIn}
+        <AuthLayout subtitle="Welcome back, adventurer!" onSubmit={handleSubmit}>
+            <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
             >
-                <GoogleIcon /> Continue with Google
-            </motion.button>
+                <motion.div variants={itemVariants}>
+                    <div className="input-group-rose">
+                        <label className="label-rose" htmlFor="login-identifier">Email or Username</label>
+                        <div className="input-container-rose">
+                            <Mail className="input-icon-rose" size={18} />
+                            <input
+                                id="login-identifier"
+                                type="text"
+                                className="input-rose"
+                                placeholder="you@example.com"
+                                value={identifier}
+                                onChange={(e) => setIdentifier(e.target.value)}
+                                required
+                                autoComplete="account-id"
+                            />
+                        </div>
+                    </div>
+                </motion.div>
 
-            <div className="divider-liquid">
-                <span className="divider-line-liquid"></span>
-                <span>or use gmail</span>
-                <span className="divider-line-liquid"></span>
-            </div>
+                <motion.div variants={itemVariants}>
+                    <div className="input-group-rose">
+                        <label className="label-rose" htmlFor="login-password">Password</label>
+                        <div className="input-container-rose">
+                            <Lock className="input-icon-rose" size={18} />
+                            <input
+                                id="login-password"
+                                type={showPassword ? "text" : "password"}
+                                className="input-rose"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                autoComplete="current-password"
+                            />
+                            <button 
+                                type="button" 
+                                className="password-toggle-rose"
+                                onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
 
-            <form className="auth-form" onSubmit={handleSubmit}>
-                <div className="input-field-liquid">
-                    <Mail className="input-icon-liquid" size={20} />
-                    <input
-                        type="text"
-                        className="auth-input"
-                        placeholder="Email Address or Username"
-                        value={identifier}
-                        onChange={(e) => setIdentifier(e.target.value)}
-                        required
-                    />
-                </div>
+                <motion.div variants={itemVariants}>
+                    <a href="#" onClick={handleForgotPassword} className="forgot-password-link">Forgot password?</a>
+                </motion.div>
 
-                <div className="input-field-liquid">
-                    <Lock className="input-icon-liquid" size={20} />
-                    <input
-                        type="password"
-                        className="auth-input"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
+                <motion.div variants={itemVariants}>
+                    <motion.button
+                        type="submit"
+                        className="btn-primary-rose"
                         disabled={isLoading}
-                    />
-                </div>
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                    >
+                        {isLoading ? (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Loader2 size={20} className="animate-spin" />
+                            </div>
+                        ) : 'Sign In'}
+                    </motion.button>
+                </motion.div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
-                    <a href="#" className="auth-link" style={{ fontSize: '13px', opacity: 0.8 }}>Forgot Password?</a>
-                </div>
+                <motion.div variants={itemVariants}>
+                    <div className="divider-rose">
+                        <span className="divider-line-rose"></span>
+                        <span>or</span>
+                        <span className="divider-line-rose"></span>
+                    </div>
+                </motion.div>
 
-                <motion.button
-                    type="submit"
-                    className="auth-btn-glow"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                    disabled={isLoading}
-                    style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                    {isLoading ? (
-                        <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                        >
-                            <Loader2 size={20} />
-                        </motion.div>
-                    ) : 'Login'}
-                </motion.button>
+                <motion.div variants={itemVariants}>
+                    <motion.button
+                        type="button"
+                        className="google-btn-rose"
+                        onClick={handleGoogleSignIn}
+                        disabled={isLoading}
+                        whileHover={{ scale: 1.01, backgroundColor: "#fdf8f9" }}
+                        whileTap={{ scale: 0.99 }}
+                    >
+                        <GoogleIcon /> Continue with Google
+                    </motion.button>
+                </motion.div>
 
-                <p className="auth-footer">
-                    New explorer? <Link to="/signup" className="auth-link">Start Journey</Link>
-                </p>
-            </form>
+                <motion.div variants={itemVariants}>
+                    <p className="auth-footer">
+                        Don't have an account? <Link to="/signup" className="auth-link">Sign Up</Link>
+                    </p>
+                </motion.div>
+            </motion.div>
         </AuthLayout>
     );
 };
