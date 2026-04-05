@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   MapPin,
   Calendar,
@@ -556,31 +556,35 @@ const ProfilePage = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <motion.button
-                className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-rose-500/30 transition-all duration-300 group"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="p-3 rounded-full bg-rose-500/10 text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors duration-300">
-                  <Heart size={24} />
-                </div>
-                <span className="text-gray-300 font-medium group-hover:text-white transition-colors">
-                  Saved Trips
-                </span>
-              </motion.button>
+              <Link to="/saved-trips">
+                <motion.div
+                  className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-rose-500/30 transition-all duration-300 group cursor-pointer"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="p-3 rounded-full bg-rose-500/10 text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors duration-300">
+                    <Heart size={24} />
+                  </div>
+                  <span className="text-gray-300 font-medium group-hover:text-white transition-colors">
+                    Saved Trips
+                  </span>
+                </motion.div>
+              </Link>
 
-              <motion.button
-                className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-rose-500/30 transition-all duration-300 group"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="p-3 rounded-full bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300">
-                  <Briefcase size={24} />
-                </div>
-                <span className="text-gray-300 font-medium group-hover:text-white transition-colors">
-                  My Journey
-                </span>
-              </motion.button>
+              <Link to="/my-journeys">
+                <motion.div
+                  className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-rose-500/30 transition-all duration-300 group cursor-pointer"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="p-3 rounded-full bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300">
+                    <Briefcase size={24} />
+                  </div>
+                  <span className="text-gray-300 font-medium group-hover:text-white transition-colors">
+                    My Journey
+                  </span>
+                </motion.div>
+              </Link>
             </div>
           </motion.div>
         </motion.div>
