@@ -12,7 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+
 import toast from "react-hot-toast";
 
 const dummyUsers = [
@@ -24,7 +24,12 @@ const dummyUsers = [
     age: 26,
     gender: "female",
     location: { city: "Bangkok", country: "Thailand" },
-    travelInterests: ["Street Food", "Beach Vibes", "Photography", "Backpacking"],
+    travelInterests: [
+      "Street Food",
+      "Beach Vibes",
+      "Photography",
+      "Backpacking",
+    ],
     travelStyle: "budget",
     profilePic: "https://i.pravatar.cc/300?img=1",
     followers: ["a", "b", "c"],
@@ -52,7 +57,12 @@ const dummyUsers = [
     age: 29,
     gender: "female",
     location: { city: "Milan", country: "Italy" },
-    travelInterests: ["Fine Dining", "Spa & Wellness", "Art & Culture", "Shopping"],
+    travelInterests: [
+      "Fine Dining",
+      "Spa & Wellness",
+      "Art & Culture",
+      "Shopping",
+    ],
     travelStyle: "luxury",
     profilePic: "https://i.pravatar.cc/300?img=5",
     followers: ["a", "b", "c", "d"],
@@ -66,7 +76,12 @@ const dummyUsers = [
     age: 24,
     gender: "male",
     location: { city: "Mumbai", country: "India" },
-    travelInterests: ["Backpacking", "Cultural Heritage", "Local Experiences", "Street Food"],
+    travelInterests: [
+      "Backpacking",
+      "Cultural Heritage",
+      "Local Experiences",
+      "Street Food",
+    ],
     travelStyle: "budget",
     profilePic: "https://i.pravatar.cc/300?img=8",
     followers: ["a"],
@@ -80,7 +95,12 @@ const dummyUsers = [
     age: 33,
     gender: "female",
     location: { city: "Stockholm", country: "Sweden" },
-    travelInterests: ["Cultural Heritage", "Museums", "Architecture", "Local Cuisine"],
+    travelInterests: [
+      "Cultural Heritage",
+      "Museums",
+      "Architecture",
+      "Local Cuisine",
+    ],
     travelStyle: "mid-range",
     profilePic: "https://i.pravatar.cc/300?img=9",
     followers: ["a", "b", "c"],
@@ -108,7 +128,12 @@ const dummyUsers = [
     age: 30,
     gender: "female",
     location: { city: "Tokyo", country: "Japan" },
-    travelInterests: ["Street Food", "Fine Dining", "Cooking Classes", "Markets"],
+    travelInterests: [
+      "Street Food",
+      "Fine Dining",
+      "Cooking Classes",
+      "Markets",
+    ],
     travelStyle: "mid-range",
     profilePic: "https://i.pravatar.cc/300?img=20",
     followers: ["a", "b", "c", "d", "e"],
@@ -171,9 +196,11 @@ const FindMatesPage = () => {
       user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.location?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.location?.country?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.location?.country
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
       user.travelInterests?.some((interest) =>
-        interest.toLowerCase().includes(searchQuery.toLowerCase())
+        interest.toLowerCase().includes(searchQuery.toLowerCase()),
       );
 
     const matchesStyle =
@@ -210,21 +237,14 @@ const FindMatesPage = () => {
 
       <Navbar />
 
-      <main className="flex-grow pt-32 pb-20 px-4 sm:px-6 lg:px-8 z-10 max-w-7xl mx-auto w-full">
+      <main className="pt-10 pb-20 px-4 sm:px-6 lg:px-8 z-10 max-w-7xl mx-auto w-full">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="text-center mb-10"
-        >
-          <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-3">
-            Find Your <span className="text-[#f43f5e]">Travel Mates</span>
-          </h1>
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-            Connect with like-minded travelers, share experiences, and plan your next adventure together.
-          </p>
-        </motion.div>
+        ></motion.div>
 
         {/* Search & Filters */}
         <motion.div
@@ -269,7 +289,9 @@ const FindMatesPage = () => {
                 className="p-5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl flex flex-wrap gap-4 overflow-hidden"
               >
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400 font-medium">Travel Style</label>
+                  <label className="text-sm text-gray-400 font-medium">
+                    Travel Style
+                  </label>
                   <div className="flex gap-2">
                     {["all", "budget", "mid-range", "luxury"].map((style) => (
                       <button
@@ -287,7 +309,9 @@ const FindMatesPage = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400 font-medium">Gender</label>
+                  <label className="text-sm text-gray-400 font-medium">
+                    Gender
+                  </label>
                   <div className="flex gap-2">
                     {["all", "male", "female", "other"].map((gender) => (
                       <button
@@ -315,7 +339,8 @@ const FindMatesPage = () => {
           animate={{ opacity: 1 }}
           className="text-sm text-gray-500 mb-6"
         >
-          Showing {filteredUsers.length} traveler{filteredUsers.length !== 1 ? "s" : ""}
+          Showing {filteredUsers.length} traveler
+          {filteredUsers.length !== 1 ? "s" : ""}
         </motion.p>
 
         {/* User Grid */}
@@ -328,118 +353,56 @@ const FindMatesPage = () => {
           >
             {filteredUsers.map((user) => (
               <motion.div key={user._id} variants={itemVariants}>
-                <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl hover:border-rose-500/30 transition-all duration-300 group">
-                  {/* Profile Header */}
-                  <div className="flex items-start gap-4 mb-4">
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl hover:border-rose-500/30 hover:bg-white/[0.07] transition-all duration-300 group">
+                  {/* Profile Pic */}
+                  <div className="relative shrink-0">
                     <img
                       src={user.profilePic}
                       alt={user.fullName}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-white/10 group-hover:border-rose-500/50 transition-colors"
+                      className="w-16 h-16 rounded-full object-cover border-2 border-white/20 group-hover:border-rose-500 transition-colors"
                     />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-white truncate">
-                        {user.fullName}
-                      </h3>
-                      <p className="text-sm text-rose-400">@{user.username}</p>
-                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0f172a]" />
                   </div>
 
-                  {/* Bio */}
-                  <p className="text-sm text-gray-400 leading-relaxed mb-4 line-clamp-2">
-                    {user.bio}
-                  </p>
-
-                  {/* Location */}
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                    <MapPin size={14} />
-                    <span>
-                      {user.location?.city
-                        ? `${user.location.city}, ${user.location.country}`
-                        : "Unknown"}
-                    </span>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-bold text-white truncate group-hover:text-rose-400 transition-colors">
+                      {user.fullName}
+                    </h3>
+                    <p className="text-xs text-gray-400 truncate">
+                      @{user.username}
+                    </p>
                   </div>
 
-                  {/* Travel Style Badge */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-medium capitalize ${getTravelStyleColor(
-                        user.travelStyle
-                      )}`}
+                  {/* Actions */}
+                  <div className="flex flex-col gap-2 shrink-0">
+                    <button
+                      onClick={() => handleFollow(user._id)}
+                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                        followedUsers.has(user._id)
+                          ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                          : "bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-500/20"
+                      }`}
                     >
-                      <Star size={12} />
-                      {user.travelStyle}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {user.age} yrs • {user.gender}
-                    </span>
-                  </div>
-
-                  {/* Interests */}
-                  <div className="flex flex-wrap gap-2 mb-5">
-                    {user.travelInterests?.slice(0, 3).map((interest, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-gray-400"
-                      >
-                        {interest}
-                      </span>
-                    ))}
-                    {user.travelInterests?.length > 3 && (
-                      <span className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-gray-500">
-                        +{user.travelInterests.length - 3}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Stats & Actions */}
-                  <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Users size={12} />
-                        {user.followers?.length || 0}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart size={12} />
-                        {user.following?.length || 0}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleFollow(user._id)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-                          followedUsers.has(user._id)
-                            ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                            : "bg-rose-500 text-white hover:bg-rose-600"
-                        }`}
-                      >
-                        {followedUsers.has(user._id) ? (
-                          <>
-                            <UserPlus size={14} />
-                            Following
-                          </>
-                        ) : (
-                          <>
-                            <UserPlus size={14} />
-                            Follow
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() =>
-                          toast("Message feature coming soon!", {
-                            icon: "💬",
-                            style: {
-                              background: "#321B22",
-                              color: "#fff",
-                              borderRadius: "12px",
-                            },
-                          })
-                        }
-                        className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all"
-                      >
-                        <MessageCircle size={16} />
-                      </button>
-                    </div>
+                      <UserPlus size={12} />
+                      {followedUsers.has(user._id) ? "Following" : "Follow"}
+                    </button>
+                    <button
+                      onClick={() =>
+                        toast("Message feature coming soon!", {
+                          icon: "💬",
+                          style: {
+                            background: "#321B22",
+                            color: "#fff",
+                            borderRadius: "12px",
+                          },
+                        })
+                      }
+                      className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all flex items-center gap-1.5 text-xs font-medium"
+                    >
+                      <MessageCircle size={14} />
+                      Message
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -454,7 +417,9 @@ const FindMatesPage = () => {
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
               <Search size={32} className="text-gray-600" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">No travelers found</h3>
+            <h3 className="text-xl font-bold text-white mb-2">
+              No travelers found
+            </h3>
             <p className="text-gray-500 mb-6">
               Try adjusting your search or filters to find more travel mates.
             </p>
@@ -471,8 +436,6 @@ const FindMatesPage = () => {
           </motion.div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 };

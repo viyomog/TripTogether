@@ -22,6 +22,8 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import CookiePolicyPage from "./pages/CookiePolicyPage";
 import FindMatesPage from "./pages/FindMatesPage";
+import SavedTripsPage from "./pages/SavedTripsPage";
+import MyJourneysPage from "./pages/MyJourneysPage";
 import { UserProvider } from "./context/userContext";
 import "./App.css";
 
@@ -155,6 +157,28 @@ const AppRoutes = () => {
             <PageTransition>
               <FindMatesPage />
             </PageTransition>
+          }
+        />
+
+        {/* Protected User Routes */}
+        <Route
+          path="/saved-trips"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <SavedTripsPage />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-journeys"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <MyJourneysPage />
+              </PageTransition>
+            </ProtectedRoute>
           }
         />
 
