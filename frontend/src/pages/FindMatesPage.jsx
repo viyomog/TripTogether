@@ -69,8 +69,6 @@ const FindMatesPage = () => {
             username: query,
             page: pageNum,
             limit: 12,
-            travelStyle: selectedStyle !== "all" ? selectedStyle : undefined,
-            gender: selectedGender !== "all" ? selectedGender : undefined,
           },
           withCredentials: true,
         }
@@ -94,13 +92,13 @@ const FindMatesPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedStyle, selectedGender]);
+  }, []);
 
-  // Reset and fetch when search or filters change
+  // Reset and fetch when search query changes
   useEffect(() => {
     setPage(1);
     fetchUsers(1, searchQuery);
-  }, [searchQuery, selectedStyle, selectedGender, fetchUsers]);
+  }, [searchQuery, fetchUsers]);
 
   // Fetch more when page changes
   useEffect(() => {
