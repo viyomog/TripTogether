@@ -68,26 +68,26 @@ const FindMatesPage = () => {
           params: {
             username: query,
             page: pageNum,
-            limit: 12,
+            limit: 10,
           },
           withCredentials: true,
         }
       );
 
       const data = response.data;
-      if (data.success) {
+      if (data.users) {
         if (pageNum === 1) {
-          setUsers(data.profiles);
+          setUsers(data.users);
         } else {
-          setUsers((prev) => [...prev, ...data.profiles]);
+          setUsers((prev) => [...prev, ...data.users]);
         }
-        setHasMore(data.profiles.length === 12);
+        setHasMore(data.hasMore);
       } else {
         setHasMore(false);
       }
     } catch (error) {
-      console.error("Fetch users error:", error);
-      toast.error("Failed to fetch travelers");
+      console.error("Fetch users error details:", error.response || error);
+      toast.error(error.response?.data?.message || "Failed to fetch travelers");
       setHasMore(false);
     } finally {
       setLoading(false);
@@ -251,9 +251,7 @@ const FindMatesPage = () => {
           </div>
         )}
 
-        {!hasMore && users.length > 0 && (
-          <p className="text-center text-gray-500 mt-10">No more travelers to show.</p>
-        )}
+
 
         {!loading && users.length === 0 && (
           <motion.div
@@ -274,60 +272,48 @@ const FindMatesPage = () => {
 };
 
 const UserCard = ({ user, handleFollow, followedUsers }) => (
-  <div className="flex flex-col gap-4 p-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl hover:border-rose-500/30 hover:bg-white/[0.07] transition-all duration-300 group h-full">
-    <div className="flex items-center gap-4">
-      <div className="relative shrink-0">
-        <img
-          src={user.profilePic || "https://i.pravatar.cc/300"}
-          alt={user.fullName}
-          className="w-16 h-16 rounded-full object-cover border-2 border-white/20 group-hover:border-rose-500 transition-colors"
-        />
-        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0f172a]" />
-      </div>
+  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg hover:border-rose-500/30 hover:bg-white/[0.07] transition-all duration-300 group relative overflow-hidden">
+    {/* Profile Pic */}
+    <div className="relative shrink-0">
+      <img
+        src={user.profilePic || "https://i.pravatar.cc/300"}
+        alt={user.fullName}
+        className="w-10 h-10 rounded-full object-cover border border-white/20 group-hover:border-rose-500 transition-colors"
+      />
+      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border border-[#0f172a]" />
+    </div>
 
-      <div className="flex-1 min-w-0">
-        <h3 className="text-base font-bold text-white truncate group-hover:text-rose-400 transition-colors">
+    {/* Info & Bio */}
+    <div className="flex-1 min-w-0 pr-2">
+      <div className="flex items-baseline gap-1.5">
+        <h3 className="text-sm font-bold text-white truncate group-hover:text-rose-400 transition-colors">
           {user.fullName}
         </h3>
-        <p className="text-xs text-gray-400 truncate">@{user.username}</p>
+        <span className="text-[10px] text-gray-500 truncate">@{user.username}</span>
       </div>
+      <p className="text-[10px] text-gray-400 line-clamp-1">
+        {user.bio || "Active traveler"}
+      </p>
     </div>
 
-    <p className="text-sm text-gray-400 line-clamp-2 min-h-[2.5rem]">
-      {user.bio || "No bio available."}
-    </p>
-
-    <div className="flex flex-wrap gap-2 mt-auto pt-2">
-      {user.location && (
-        <div className="flex items-center gap-1 text-[10px] bg-white/5 px-2 py-1 rounded-full text-gray-400">
-          <MapPin size={10} />
-          {user.location.city}, {user.location.country}
-        </div>
-      )}
-      {user.travelStyle && (
-        <div className="text-[10px] bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-full text-rose-400">
-          {user.travelStyle}
-        </div>
-      )}
-    </div>
-
-    <div className="flex gap-2 mt-2">
+    {/* Actions */}
+    <div className="flex gap-1.5 shrink-0">
       <button
         onClick={() => handleFollow(user._id)}
-        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+        className={`p-2 rounded-lg transition-all flex items-center justify-center ${
           followedUsers.has(user._id)
-            ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-            : "bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-500/20"
+            ? "bg-rose-500/20 text-rose-400 border border-rose-500/20"
+            : "bg-rose-500 text-white hover:bg-rose-600 shadow-sm"
         }`}
+        title={followedUsers.has(user._id) ? "Unfollow" : "Follow"}
       >
         <UserPlus size={14} />
-        {followedUsers.has(user._id) ? "Following" : "Follow"}
       </button>
       <button
-        onClick={() => toast("Messaging coming soon!", { style: { background: "#321B22", color: "#fff" } })}
-        className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+        onClick={() => toast("Messaging coming soon!", { style: { background: "#321B22", color: "#fff", fontSize: "12px" } })}
+        className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all shadow-sm"
       >
-        <MessageCircle size={18} />
+        <MessageCircle size={14} />
       </button>
     </div>
   </div>

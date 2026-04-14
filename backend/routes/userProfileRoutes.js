@@ -113,7 +113,7 @@ router.post("/add-interests", authMiddleware, async (req, res) => {
 
 router.get("/get-profiles-from-username", authMiddleware, async (req, res) => {
   try {
-    const { username = "", page = 1, limit = 10 } = req.body;
+    const { username = "", page = 1, limit = 10 } = req.query;
 
     const loggedInUserId = req.user.id;
 

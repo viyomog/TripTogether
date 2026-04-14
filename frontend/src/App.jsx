@@ -154,9 +154,11 @@ const AppRoutes = () => {
         <Route
           path="/mates"
           element={
-            <PageTransition>
-              <FindMatesPage />
-            </PageTransition>
+            <ProtectedRoute>
+              <PageTransition>
+                <FindMatesPage />
+              </PageTransition>
+            </ProtectedRoute>
           }
         />
 
