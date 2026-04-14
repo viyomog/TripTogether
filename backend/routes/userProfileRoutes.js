@@ -111,4 +111,32 @@ router.post("/add-interests", authMiddleware, async (req, res) => {
   }
 });
 
+router.get("/get-profiles-from-username", authMiddleware, async (req, res) => {
+  try {
+    const { username = "", page = 1, limit = 10 } = req.body;
+
+    const loggedInUserId = req.user.id;
+
+    const skip = (page - 1) * limit;
+
+    const users = await User.find({
+      username: { $regex: username, $options: "i" },
+      _id: { $ne: loggedInUserId }, 
+    })
+      .select("username fullName profilePic")
+      .skip(skip)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      users,
+      page: Number(page),
+      hasMore: users.length === Number(limit), 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
