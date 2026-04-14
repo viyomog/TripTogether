@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin,
@@ -10,150 +10,11 @@ import {
   MessageCircle,
   Star,
   Users,
+  Loader2,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
-
+import axios from "axios";
 import toast from "react-hot-toast";
-
-const dummyUsers = [
-  {
-    _id: "1",
-    username: "wanderlust_sarah",
-    fullName: "Sarah Chen",
-    bio: "Digital nomad exploring Southeast Asia. Love street food and hidden beaches!",
-    age: 26,
-    gender: "female",
-    location: { city: "Bangkok", country: "Thailand" },
-    travelInterests: [
-      "Street Food",
-      "Beach Vibes",
-      "Photography",
-      "Backpacking",
-    ],
-    travelStyle: "budget",
-    profilePic: "https://i.pravatar.cc/300?img=1",
-    followers: ["a", "b", "c"],
-    following: ["d", "e"],
-  },
-  {
-    _id: "2",
-    username: "mountain_mike",
-    fullName: "Mike Torres",
-    bio: "Adventure junkie. Hiking, camping, and conquering peaks. Next stop: Patagonia!",
-    age: 31,
-    gender: "male",
-    location: { city: "Denver", country: "USA" },
-    travelInterests: ["Hiking", "Camping", "Mountaineering", "Wildlife"],
-    travelStyle: "mid-range",
-    profilePic: "https://i.pravatar.cc/300?img=12",
-    followers: ["a", "b"],
-    following: ["c", "d", "e"],
-  },
-  {
-    _id: "3",
-    username: "luxury_luna",
-    fullName: "Luna Rossi",
-    bio: "Luxury travel curator. 5-star resorts, fine dining, and exclusive experiences.",
-    age: 29,
-    gender: "female",
-    location: { city: "Milan", country: "Italy" },
-    travelInterests: [
-      "Fine Dining",
-      "Spa & Wellness",
-      "Art & Culture",
-      "Shopping",
-    ],
-    travelStyle: "luxury",
-    profilePic: "https://i.pravatar.cc/300?img=5",
-    followers: ["a", "b", "c", "d"],
-    following: ["e"],
-  },
-  {
-    _id: "4",
-    username: "backpacker_raj",
-    fullName: "Raj Patel",
-    bio: "Budget traveler on a mission to visit 50 countries. Currently at 32!",
-    age: 24,
-    gender: "male",
-    location: { city: "Mumbai", country: "India" },
-    travelInterests: [
-      "Backpacking",
-      "Cultural Heritage",
-      "Local Experiences",
-      "Street Food",
-    ],
-    travelStyle: "budget",
-    profilePic: "https://i.pravatar.cc/300?img=8",
-    followers: ["a"],
-    following: ["b", "c"],
-  },
-  {
-    _id: "5",
-    username: "culture_emma",
-    fullName: "Emma Johansson",
-    bio: "History buff and museum lover. Every city has a story waiting to be discovered.",
-    age: 33,
-    gender: "female",
-    location: { city: "Stockholm", country: "Sweden" },
-    travelInterests: [
-      "Cultural Heritage",
-      "Museums",
-      "Architecture",
-      "Local Cuisine",
-    ],
-    travelStyle: "mid-range",
-    profilePic: "https://i.pravatar.cc/300?img=9",
-    followers: ["a", "b", "c"],
-    following: ["d", "e", "f"],
-  },
-  {
-    _id: "6",
-    username: "surf_alex",
-    fullName: "Alex Kim",
-    bio: "Chasing waves around the world. Surf, sun, and good vibes only.",
-    age: 27,
-    gender: "other",
-    location: { city: "Bali", country: "Indonesia" },
-    travelInterests: ["Surfing", "Beach Vibes", "Yoga", "Photography"],
-    travelStyle: "mid-range",
-    profilePic: "https://i.pravatar.cc/300?img=15",
-    followers: ["a", "b"],
-    following: ["c"],
-  },
-  {
-    _id: "7",
-    username: "foodie_yuki",
-    fullName: "Yuki Tanaka",
-    bio: "Traveling the world one dish at a time. Food is the best way to experience culture!",
-    age: 30,
-    gender: "female",
-    location: { city: "Tokyo", country: "Japan" },
-    travelInterests: [
-      "Street Food",
-      "Fine Dining",
-      "Cooking Classes",
-      "Markets",
-    ],
-    travelStyle: "mid-range",
-    profilePic: "https://i.pravatar.cc/300?img=20",
-    followers: ["a", "b", "c", "d", "e"],
-    following: ["f", "g"],
-  },
-  {
-    _id: "8",
-    username: "nomad_carlos",
-    fullName: "Carlos Rivera",
-    bio: "Remote worker by day, explorer by night. Let's connect and share travel tips!",
-    age: 28,
-    gender: "male",
-    location: { city: "Lisbon", country: "Portugal" },
-    travelInterests: ["Digital Nomad", "Co-working", "Nightlife", "Hiking"],
-    travelStyle: "budget",
-    profilePic: "https://i.pravatar.cc/300?img=11",
-    followers: ["a"],
-    following: ["b", "c", "d"],
-  },
-];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -172,44 +33,81 @@ const itemVariants = {
   },
 };
 
-const getTravelStyleColor = (style) => {
-  switch (style) {
-    case "budget":
-      return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
-    case "luxury":
-      return "bg-amber-500/20 text-amber-400 border-amber-500/30";
-    default:
-      return "bg-rose-500/20 text-rose-400 border-rose-500/30";
-  }
-};
-
 const FindMatesPage = () => {
+  const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState("all");
   const [selectedGender, setSelectedGender] = useState("all");
-  const [showFilters, setShowFilters] = useState(false);
   const [followedUsers, setFollowedUsers] = useState(new Set());
 
-  const filteredUsers = dummyUsers.filter((user) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.location?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.location?.country
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      user.travelInterests?.some((interest) =>
-        interest.toLowerCase().includes(searchQuery.toLowerCase()),
+  const observer = useRef();
+  const lastUserElementRef = useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((prevPage) => prevPage + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
+
+  const fetchUsers = useCallback(async (pageNum, query) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:5000/api/user-profile/get-profiles-from-username`,
+        {
+          params: {
+            username: query,
+            page: pageNum,
+            limit: 12,
+            travelStyle: selectedStyle !== "all" ? selectedStyle : undefined,
+            gender: selectedGender !== "all" ? selectedGender : undefined,
+          },
+          withCredentials: true,
+        }
       );
 
-    const matchesStyle =
-      selectedStyle === "all" || user.travelStyle === selectedStyle;
-    const matchesGender =
-      selectedGender === "all" || user.gender === selectedGender;
+      const data = response.data;
+      if (data.success) {
+        if (pageNum === 1) {
+          setUsers(data.profiles);
+        } else {
+          setUsers((prev) => [...prev, ...data.profiles]);
+        }
+        setHasMore(data.profiles.length === 12);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Fetch users error:", error);
+      toast.error("Failed to fetch travelers");
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedStyle, selectedGender]);
 
-    return matchesSearch && matchesStyle && matchesGender;
-  });
+  // Reset and fetch when search or filters change
+  useEffect(() => {
+    setPage(1);
+    fetchUsers(1, searchQuery);
+  }, [searchQuery, selectedStyle, selectedGender, fetchUsers]);
+
+  // Fetch more when page changes
+  useEffect(() => {
+    if (page > 1) {
+      fetchUsers(page, searchQuery);
+    }
+  }, [page, searchQuery, fetchUsers]);
 
   const handleFollow = (userId) => {
     setFollowedUsers((prev) => {
@@ -237,15 +135,7 @@ const FindMatesPage = () => {
 
       <Navbar />
 
-      <main className="pt-10 pb-20 px-4 sm:px-6 lg:px-8 z-10 max-w-7xl mx-auto w-full">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-10"
-        ></motion.div>
-
+      <main className="pt-24 pb-20 px-4 sm:px-6 lg:px-8 z-10 max-w-7xl mx-auto w-full">
         {/* Search & Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -261,7 +151,7 @@ const FindMatesPage = () => {
               />
               <input
                 type="text"
-                placeholder="Search by name, location, or interest..."
+                placeholder="Search by username..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
@@ -333,82 +223,41 @@ const FindMatesPage = () => {
           </AnimatePresence>
         </motion.div>
 
-        {/* Results Count */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-sm text-gray-500 mb-6"
-        >
-          Showing {filteredUsers.length} traveler
-          {filteredUsers.length !== 1 ? "s" : ""}
-        </motion.p>
-
         {/* User Grid */}
-        {filteredUsers.length > 0 ? (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {filteredUsers.map((user) => (
-              <motion.div key={user._id} variants={itemVariants}>
-                <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl hover:border-rose-500/30 hover:bg-white/[0.07] transition-all duration-300 group">
-                  {/* Profile Pic */}
-                  <div className="relative shrink-0">
-                    <img
-                      src={user.profilePic}
-                      alt={user.fullName}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-white/20 group-hover:border-rose-500 transition-colors"
-                    />
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0f172a]" />
-                  </div>
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {users.map((user, index) => {
+            if (users.length === index + 1) {
+              return (
+                <motion.div ref={lastUserElementRef} key={user._id} variants={itemVariants}>
+                  <UserCard user={user} handleFollow={handleFollow} followedUsers={followedUsers} />
+                </motion.div>
+              );
+            } else {
+              return (
+                <motion.div key={user._id} variants={itemVariants}>
+                  <UserCard user={user} handleFollow={handleFollow} followedUsers={followedUsers} />
+                </motion.div>
+              );
+            }
+          })}
+        </motion.div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-bold text-white truncate group-hover:text-rose-400 transition-colors">
-                      {user.fullName}
-                    </h3>
-                    <p className="text-xs text-gray-400 truncate">
-                      @{user.username}
-                    </p>
-                  </div>
+        {loading && (
+          <div className="flex justify-center mt-10">
+            <Loader2 className="w-8 h-8 text-rose-500 animate-spin" />
+          </div>
+        )}
 
-                  {/* Actions */}
-                  <div className="flex flex-col gap-2 shrink-0">
-                    <button
-                      onClick={() => handleFollow(user._id)}
-                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                        followedUsers.has(user._id)
-                          ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                          : "bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-500/20"
-                      }`}
-                    >
-                      <UserPlus size={12} />
-                      {followedUsers.has(user._id) ? "Following" : "Follow"}
-                    </button>
-                    <button
-                      onClick={() =>
-                        toast("Message feature coming soon!", {
-                          icon: "💬",
-                          style: {
-                            background: "#321B22",
-                            color: "#fff",
-                            borderRadius: "12px",
-                          },
-                        })
-                      }
-                      className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all flex items-center gap-1.5 text-xs font-medium"
-                    >
-                      <MessageCircle size={14} />
-                      Message
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        ) : (
+        {!hasMore && users.length > 0 && (
+          <p className="text-center text-gray-500 mt-10">No more travelers to show.</p>
+        )}
+
+        {!loading && users.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -417,27 +266,73 @@ const FindMatesPage = () => {
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
               <Search size={32} className="text-gray-600" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">
-              No travelers found
-            </h3>
-            <p className="text-gray-500 mb-6">
-              Try adjusting your search or filters to find more travel mates.
-            </p>
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedStyle("all");
-                setSelectedGender("all");
-              }}
-              className="px-6 py-3 bg-rose-500 text-white font-medium rounded-xl hover:bg-rose-600 transition-colors"
-            >
-              Clear Filters
-            </button>
+            <h3 className="text-xl font-bold text-white mb-2">No travelers found</h3>
+            <p className="text-gray-500 mb-6">Try searching for another username.</p>
           </motion.div>
         )}
       </main>
     </div>
   );
 };
+
+const UserCard = ({ user, handleFollow, followedUsers }) => (
+  <div className="flex flex-col gap-4 p-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl hover:border-rose-500/30 hover:bg-white/[0.07] transition-all duration-300 group h-full">
+    <div className="flex items-center gap-4">
+      <div className="relative shrink-0">
+        <img
+          src={user.profilePic || "https://i.pravatar.cc/300"}
+          alt={user.fullName}
+          className="w-16 h-16 rounded-full object-cover border-2 border-white/20 group-hover:border-rose-500 transition-colors"
+        />
+        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0f172a]" />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <h3 className="text-base font-bold text-white truncate group-hover:text-rose-400 transition-colors">
+          {user.fullName}
+        </h3>
+        <p className="text-xs text-gray-400 truncate">@{user.username}</p>
+      </div>
+    </div>
+
+    <p className="text-sm text-gray-400 line-clamp-2 min-h-[2.5rem]">
+      {user.bio || "No bio available."}
+    </p>
+
+    <div className="flex flex-wrap gap-2 mt-auto pt-2">
+      {user.location && (
+        <div className="flex items-center gap-1 text-[10px] bg-white/5 px-2 py-1 rounded-full text-gray-400">
+          <MapPin size={10} />
+          {user.location.city}, {user.location.country}
+        </div>
+      )}
+      {user.travelStyle && (
+        <div className="text-[10px] bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-full text-rose-400">
+          {user.travelStyle}
+        </div>
+      )}
+    </div>
+
+    <div className="flex gap-2 mt-2">
+      <button
+        onClick={() => handleFollow(user._id)}
+        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+          followedUsers.has(user._id)
+            ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+            : "bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-500/20"
+        }`}
+      >
+        <UserPlus size={14} />
+        {followedUsers.has(user._id) ? "Following" : "Follow"}
+      </button>
+      <button
+        onClick={() => toast("Messaging coming soon!", { style: { background: "#321B22", color: "#fff" } })}
+        className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+      >
+        <MessageCircle size={18} />
+      </button>
+    </div>
+  </div>
+);
 
 export default FindMatesPage;
