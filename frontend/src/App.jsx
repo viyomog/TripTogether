@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { UserContext } from "./context/userContext";
 
@@ -24,7 +24,14 @@ import CookiePolicyPage from "./pages/CookiePolicyPage";
 import FindMatesPage from "./pages/FindMatesPage";
 import SavedTripsPage from "./pages/SavedTripsPage";
 import MyJourneysPage from "./pages/MyJourneysPage";
+import FollowersPage from "./pages/FollowersPage";
+import FollowingPage from "./pages/FollowingPage";
+import ChatPage from "./pages/ChatPage";
 import { UserProvider } from "./context/userContext";
+import { SocketContextProvider } from "./context/SocketContext";
+import { CallProvider } from "./context/CallContext";
+import { requestForToken, onMessageListener } from "./firebase";
+import toast from "react-hot-toast";
 import "./App.css";
 
 const routeOrder = ["/", "/contact", "/faqs", "/mates", "/login"];
@@ -48,6 +55,25 @@ const AppRoutes = () => {
   React.useEffect(() => {
     prevIndexRef.current = currentIndex;
   }, [currentIndex]);
+
+  const { user } = useContext(UserContext);
+
+  /* 
+  useEffect(() => {
+    if (user) {
+      requestForToken();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    onMessageListener((payload) => {
+      toast.success(`${payload.notification.title}: ${payload.notification.body}`, {
+        duration: 6000,
+        style: { background: "#1e293b", color: "#fff", borderRadius: "12px" },
+      });
+    });
+  }, []);
+  */
 
   return (
     <AnimatePresence mode="wait">
@@ -132,6 +158,16 @@ const AppRoutes = () => {
 
         {/* User paths */}
         <Route
+          path="/profile/:username"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <ProfilePage />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/profile"
           element={
             <ProtectedRoute>
@@ -183,6 +219,56 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/followers"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <FollowersPage />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/:username/followers"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <FollowersPage />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/following"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <FollowingPage />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/:username/following"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <FollowingPage />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <ChatPage />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
 
         {/* Fallback route */}
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -194,7 +280,11 @@ const AppRoutes = () => {
 function App() {
   return (
     <UserProvider>
-      <AppRoutes />
+      <SocketContextProvider>
+        <CallProvider>
+          <AppRoutes />
+        </CallProvider>
+      </SocketContextProvider>
     </UserProvider>
   );
 }

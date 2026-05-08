@@ -1,0 +1,157 @@
+.followers-container {
+  background: #0f172a;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  color: #e2e8f0;
+  font-family: 'Inter', sans-serif;
+}
+
+.followers-bg-blob {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: rgba(244, 63, 94, 0.15);
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.blob-1 {
+  top: -10%;
+  right: -10%;
+}
+
+.blob-2 {
+  bottom: -10%;
+  left: -10%;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.followers-content {
+  position: relative;
+  z-index: 10;
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 90px 20px 40px;
+}
+
+.followers-header {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.followers-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #f43f5e;
+  background: linear-gradient(to right, #f43f5e, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
+}
+
+.followers-subtitle {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.followers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.follower-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  text-decoration: none;
+}
+
+.follower-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(244, 63, 94, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.follower-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.3s ease;
+}
+
+.follower-card:hover .follower-avatar {
+  border-color: #f43f5e;
+}
+
+.follower-info {
+  flex: 1;
+}
+
+.follower-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.follower-username {
+  font-size: 0.85rem;
+  color: #f43f5e;
+  font-weight: 500;
+}
+
+.follower-bio {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 30px 20px;
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.empty-icon {
+  margin-bottom: 12px;
+  color: #475569;
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 640px) {
+  .followers-title {
+    font-size: 2rem;
+  }
+  
+  .follower-card {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .follower-avatar {
+    width: 48px;
+    height: 48px;
+  }
+}

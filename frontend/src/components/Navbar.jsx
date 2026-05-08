@@ -13,6 +13,7 @@ const Navbar = () => {
     { to: "/contact", label: "Contact" },
     { to: "/faqs", label: "FAQs" },
     { to: "/mates", label: "Find Mates" },
+    { to: "/chat", label: "Messages", protected: true },
   ];
 
   const closeMenu = () => setIsOpen(false);
@@ -33,13 +34,15 @@ const Navbar = () => {
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center space-x-8 text-white text-sm">
             {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`font-medium hover:text-[#fda4af] transition-colors drop-shadow-sm ${location.pathname === link.to ? "font-bold text-[#fda4af]" : ""}`}
-              >
-                {link.label}
-              </Link>
+              (!link.protected || user) && (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`font-medium hover:text-[#fda4af] transition-colors drop-shadow-sm ${location.pathname === link.to ? "font-bold text-[#fda4af]" : ""}`}
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
             {user ? (
               <Link
@@ -89,14 +92,16 @@ const Navbar = () => {
           >
             <div className="flex flex-col items-center space-y-8 text-xl">
               {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={closeMenu}
-                  className={`font-bold text-white hover:text-[#f43f5e] transition-colors ${location.pathname === link.to ? "text-[#f43f5e]" : ""}`}
-                >
-                  {link.label}
-                </Link>
+                (!link.protected || user) && (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={closeMenu}
+                    className={`font-bold text-white hover:text-[#f43f5e] transition-colors ${location.pathname === link.to ? "text-[#f43f5e]" : ""}`}
+                  >
+                    {link.label}
+                  </Link>
+                )
               ))}
               {user ? (
                 <Link

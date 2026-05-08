@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useParams } from "react-router-dom";
 import {
   MapPin,
   Calendar,
@@ -14,6 +14,9 @@ import {
   Star,
   X,
   Loader2,
+  UserPlus,
+  UserMinus,
+  MessageSquare,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 
@@ -41,8 +44,10 @@ const itemVariants = {
 };
 
 const ProfilePage = () => {
-  const { user, setUser } = useContext(UserContext);
+  const { user: currentUser, setUser: setCurrentUser } = useContext(UserContext);
+  const { username } = useParams();
   const navigate = useNavigate();
+  const [profileData, setProfileData] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
     fullName: "",
@@ -58,32 +63,43 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const fileInputRef = React.useRef(null);
 
+  const isOwnProfile = !username || username === currentUser?.username;
+
   useEffect(() => {
     const fetchProfile = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/user-profile/get-my-profile",
-          {
-            withCredentials: true,
-          },
-        );
-        console.log("Profile API Response:", res.data);
-        setUser(res.data.user || res.data);
+        const url = username 
+          ? `http://localhost:5000/api/user-profile/get-user-profile/${username}`
+          : "http://localhost:5000/api/user-profile/get-my-profile";
+        
+        const res = await axios.get(url, { withCredentials: true });
+        const fetchedUser = res.data.user || res.data;
+        setProfileData(fetchedUser);
+        
+        if (isOwnProfile) {
+          setCurrentUser(fetchedUser);
+        }
       } catch (err) {
-        console.error(
-          "Failed to fetch profile:",
-          err.response?.data || err.message,
-        );
+        console.error("Failed to fetch profile:", err.response?.data || err.message);
         toast.error("Could not load profile data.");
       } finally {
         setLoading(false);
       }
     };
     fetchProfile();
-  }, []);
+  }, [username, currentUser?.username]);
+
+  if (loading) {
+    return (
+      <div className="min-height-screen bg-[#0f172a] flex items-center justify-center">
+        <Loader2 className="animate-spin text-rose-500" size={48} />
+      </div>
+    );
+  }
 
   // Fallback data matching the Mongoose schema structure
-  const profileData = user || {
+  const currentProfile = profileData || {
     _id: "mock-user-id",
     username: "wanderlust_alex",
     email: "alex@example.com",
@@ -99,15 +115,15 @@ const ProfilePage = () => {
       "Hiking",
       "Photography",
       "Street Food",
-      "Cultural Heritage",
-      "Beach Vibes",
+      "Hidden Gems",
       "Backpacking",
     ],
-    travelStyle: ["Mid-Range"],
+    travelStyles: ["Budget Friendly", "Off the Beaten Path"],
     profilePic: defaultAvatar,
-    followers: ["user1", "user2", "user3", "user4"],
-    following: ["user5", "user6"],
-    createdAt: "2025-04-15T10:00:00.000Z",
+    followers: [],
+    following: [],
+    trips: [],
+    createdAt: new Date(),
   };
 
   const formatDate = (dateString) => {
@@ -269,14 +285,14 @@ const ProfilePage = () => {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/auth/logout",
+        "http://localhost:5000/api/user-profile/logout",
         {},
         { withCredentials: true },
       );
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
-      setUser(null);
+      setCurrentUser(null);
       toast.success("Logged out successfully!", {
         style: { background: "#321B22", color: "#fff", borderRadius: "12px" },
       });
@@ -284,14 +300,50 @@ const ProfilePage = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="bg-[#0f172a] min-h-screen flex flex-col items-center justify-center text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-500"></div>
-        <p className="mt-4 text-gray-400">Loading your profile...</p>
-      </div>
-    );
-  }
+  const handleToggleFollow = async () => {
+    if (!profileData) return;
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/user-profile/follow-user",
+        { targetUserId: profileData._id },
+        { withCredentials: true }
+      );
+      
+      if (response.data.success) {
+        const isNowFollowing = response.data.isFollowing;
+        
+        // Update local profile data to reflect new follower count
+        setProfileData(prev => {
+          const updatedFollowers = isNowFollowing 
+            ? [...(prev.followers || []), currentUser._id]
+            : (prev.followers || []).filter(id => id !== currentUser._id);
+          return { ...prev, followers: updatedFollowers };
+        });
+
+        // Update global context
+        setCurrentUser(prevUser => {
+          if (!prevUser) return null;
+          const updatedFollowing = isNowFollowing 
+            ? [...(prevUser.following || []), profileData._id]
+            : (prevUser.following || []).filter(id => id !== profileData._id);
+            
+          return {
+            ...prevUser,
+            following: updatedFollowing
+          };
+        });
+
+        toast.success(response.data.message, {
+          style: { background: "#1e293b", color: "#fff", borderRadius: "12px" }
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      toast.error("Action failed");
+    }
+  };
+
+
 
   return (
     <div className="bg-[#0f172a] min-h-screen flex flex-col text-gray-200 font-sans overflow-hidden relative">
@@ -314,19 +366,21 @@ const ProfilePage = () => {
               {/* Main Profile Card */}
               <div className="p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col items-center text-center">
                 <motion.div
-                  className="relative mb-6 group cursor-pointer"
-                  whileHover={{ scale: 1.05 }}
+                  className={`relative mb-6 group ${isOwnProfile ? 'cursor-pointer' : ''}`}
+                  whileHover={isOwnProfile ? { scale: 1.05 } : {}}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => isOwnProfile && fileInputRef.current?.click()}
                 >
                   <img
-                    src={profileData.profilePic || defaultAvatar}
-                    alt={profileData.fullName}
+                    src={currentProfile.profilePic || defaultAvatar}
+                    alt={currentProfile.fullName}
                     className="w-36 h-36 rounded-full object-cover border-4 border-white/10 shadow-xl group-hover:border-rose-500/50 transition-colors duration-300"
                   />
-                  <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
-                    <Edit3 size={24} className="text-white" />
-                  </div>
+                  {isOwnProfile && (
+                    <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                      <Edit3 size={24} className="text-white" />
+                    </div>
+                  )}
                 </motion.div>
                 <input
                   type="file"
@@ -337,15 +391,15 @@ const ProfilePage = () => {
                 />
 
                 <h2 className="text-2xl font-bold text-white mb-1">
-                  {profileData.fullName}
+                  {currentProfile.fullName}
                 </h2>
                 <p className="text-rose-400 font-medium mb-3">
-                  @{profileData.username}
+                  @{currentProfile.username}
                 </p>
 
-                {profileData.bio && (
+                {currentProfile.bio && (
                   <p className="text-gray-400 text-sm leading-relaxed mb-6 px-2">
-                    {profileData.bio}
+                    {currentProfile.bio}
                   </p>
                 )}
 
@@ -355,8 +409,8 @@ const ProfilePage = () => {
                       <MapPin size={16} /> Location
                     </span>
                     <span className="text-gray-300 font-medium">
-                      {profileData.location?.city
-                        ? `${profileData.location.city}, ${profileData.location.country}`
+                      {currentProfile.location?.city
+                        ? `${currentProfile.location.city}, ${currentProfile.location.country}`
                         : "Not specified"}
                     </span>
                   </div>
@@ -365,78 +419,137 @@ const ProfilePage = () => {
                       <Calendar size={16} /> Joined
                     </span>
                     <span className="text-gray-300 font-medium">
-                      {formatDate(profileData.createdAt)}
+                      {formatDate(currentProfile.createdAt)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500 flex items-center gap-2">
-                      <Mail size={16} /> Email
-                    </span>
-                    <span className="text-gray-300 font-medium">
-                      {profileData.email}
-                    </span>
-                  </div>
+                  {isOwnProfile && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500 flex items-center gap-2">
+                        <Mail size={16} /> Email
+                      </span>
+                      <span className="text-gray-300 font-medium">
+                        {currentProfile.email}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                <motion.button
-                  onClick={handleEditClick}
-                  className="w-full py-3 mt-6 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold rounded-xl shadow-lg shadow-rose-500/25 transition-all duration-300 flex items-center justify-center gap-2"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Edit3 size={18} />
-                  Edit Profile
-                </motion.button>
-                <motion.button
-                  onClick={handleLogout}
-                  className="w-full py-3 mt-3 border-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                {isOwnProfile && (
+                  <motion.button
+                    onClick={handleEditClick}
+                    className="w-full py-3 mt-6 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold rounded-xl shadow-lg shadow-rose-500/25 transition-all duration-300 flex items-center justify-center gap-2"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
-                  Logout
-                </motion.button>
+                    <Edit3 size={18} />
+                    <span>Edit Profile</span>
+                  </motion.button>
+                )}
+                {isOwnProfile && (
+                  <motion.button
+                    onClick={handleLogout}
+                    className="w-full py-3 mt-3 border-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    Logout
+                  </motion.button>
+                )}
+
+                {!isOwnProfile && (
+                  <motion.button
+                    onClick={handleToggleFollow}
+                    className={`w-full py-3 mt-6 font-bold rounded-xl shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                      currentUser?.following?.includes(currentProfile._id)
+                        ? "bg-white/10 text-gray-400 border border-white/10 hover:bg-white/20"
+                        : "bg-rose-500 text-white hover:bg-rose-600 shadow-rose-500/25"
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {currentUser?.following?.includes(currentProfile._id) ? (
+                      <>
+                        <UserMinus size={18} />
+                        <span>Following</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={18} />
+                        <span>Follow</span>
+                      </>
+                    )}
+                  </motion.button>
+                )}
+
+                {!isOwnProfile && (
+                  <motion.button
+                    onClick={() => navigate("/chat")}
+                    className="w-full py-3 mt-3 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-all duration-300 flex items-center justify-center gap-2"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <MessageSquare size={18} />
+                    <span>Message</span>
+                  </motion.button>
+                )}
               </div>
 
               {/* Stats Card */}
-              <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl">
+              <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl overflow-hidden relative">
                 <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="space-y-1">
-                    <p className="text-2xl font-bold text-white">
-                      {profileData.followers?.length || 0}
+                  <Link to={isOwnProfile ? "/followers" : `/profile/${currentProfile.username}/followers`}>
+                    <motion.div 
+                      whileHover={{ y: -2 }}
+                      className="space-y-1 cursor-pointer transition-colors hover:text-rose-400 group"
+                    >
+                      <p className="text-2xl font-bold text-white group-hover:text-rose-400">
+                        {currentProfile.followers?.length || 0}
+                      </p>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold group-hover:text-rose-300">
+                        Followers
+                      </p>
+                    </motion.div>
+                  </Link>
+
+                  <Link to={isOwnProfile ? "/following" : `/profile/${currentProfile.username}/following`}>
+                    <motion.div 
+                      whileHover={{ y: -2 }}
+                      className="space-y-1 border-x border-white/10 cursor-pointer transition-colors hover:text-rose-400 group"
+                    >
+                      <p className="text-2xl font-bold text-white group-hover:text-rose-400">
+                        {currentProfile.following?.length || 0}
+                      </p>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold group-hover:text-rose-300">
+                        Following
+                      </p>
+                    </motion.div>
+                  </Link>
+                  <motion.div 
+                    whileHover={{ y: -2 }}
+                    className="space-y-1 cursor-pointer transition-colors hover:text-blue-400 group"
+                  >
+                    <p className="text-2xl font-bold text-white group-hover:text-blue-400">
+                      {currentProfile.trips?.length || 0}
                     </p>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">
-                      Followers
-                    </p>
-                  </div>
-                  <div className="space-y-1 border-x border-white/10">
-                    <p className="text-2xl font-bold text-white">
-                      {profileData.following?.length || 0}
-                    </p>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">
-                      Following
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-2xl font-bold text-white">12</p>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold group-hover:text-blue-300">
                       Trips
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </div>
@@ -457,32 +570,32 @@ const ProfilePage = () => {
                 <div className="space-y-2">
                   <p className="text-sm text-gray-500">Full Name</p>
                   <p className="text-gray-200 font-medium">
-                    {profileData.fullName}
+                    {currentProfile.fullName}
                   </p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm text-gray-500">Username</p>
                   <p className="text-gray-200 font-medium">
-                    @{profileData.username}
+                    @{currentProfile.username}
                   </p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm text-gray-500">Age</p>
                   <p className="text-gray-200 font-medium">
-                    {profileData.age || "Not specified"}
+                    {currentProfile.age || "Not specified"}
                   </p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm text-gray-500">Gender</p>
                   <p className="text-gray-200 font-medium capitalize">
-                    {profileData.gender || "Not specified"}
+                    {currentProfile.gender || "Not specified"}
                   </p>
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <p className="text-sm text-gray-500">Location</p>
                   <p className="text-gray-200 font-medium">
-                    {profileData.location?.city
-                      ? `${profileData.location.city}, ${profileData.location.country}`
+                    {currentProfile.location?.city
+                      ? `${currentProfile.location.city}, ${currentProfile.location.country}`
                       : "Not specified"}
                   </p>
                 </div>
@@ -496,23 +609,25 @@ const ProfilePage = () => {
                   <Plane size={20} className="text-rose-400" />
                   Travel Preferences
                 </h3>
-                <motion.button
-                  onClick={handleTravelEditClick}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-rose-400 hover:border-rose-500/30 transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Edit3 size={14} />
-                  Edit
-                </motion.button>
+                {isOwnProfile && (
+                  <motion.button
+                    onClick={handleTravelEditClick}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-rose-400 hover:border-rose-500/30 transition-all"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Edit3 size={14} />
+                    Edit
+                  </motion.button>
+                )}
               </div>
 
               <div className="space-y-6">
                 <div className="space-y-3">
                   <p className="text-sm text-gray-500">Travel Style</p>
                   <div className="flex flex-wrap gap-2">
-                    {profileData.travelStyles?.length > 0 ? (
-                      profileData.travelStyles.map((style, idx) => (
+                    {currentProfile.travelStyles?.length > 0 ? (
+                      currentProfile.travelStyles.map((style, idx) => (
                         <span
                           key={idx}
                           className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium capitalize ${getTravelStyleColor(
@@ -532,8 +647,8 @@ const ProfilePage = () => {
                 <div className="space-y-3">
                   <p className="text-sm text-gray-500">Travel Interests</p>
                   <div className="flex flex-wrap gap-3">
-                    {profileData.travelInterests?.length > 0 ? (
-                      profileData.travelInterests.map((interest, idx) => (
+                    {currentProfile.travelInterests?.length > 0 ? (
+                      currentProfile.travelInterests.map((interest, idx) => (
                         <motion.span
                           key={idx}
                           initial={{ opacity: 0, scale: 0.9 }}
@@ -554,38 +669,34 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link to="/saved-trips">
-                <motion.div
-                  className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-rose-500/30 transition-all duration-300 group cursor-pointer"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="p-3 rounded-full bg-rose-500/10 text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors duration-300">
-                    <Heart size={24} />
-                  </div>
-                  <span className="text-gray-300 font-medium group-hover:text-white transition-colors">
-                    Saved Trips
-                  </span>
-                </motion.div>
-              </Link>
-
-              <Link to="/my-journeys">
-                <motion.div
-                  className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-rose-500/30 transition-all duration-300 group cursor-pointer"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="p-3 rounded-full bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300">
-                    <Briefcase size={24} />
-                  </div>
-                  <span className="text-gray-300 font-medium group-hover:text-white transition-colors">
-                    My Journey
-                  </span>
-                </motion.div>
-              </Link>
-            </div>
+            {isOwnProfile && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Link to="/saved-trips">
+                  <motion.div
+                    className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-rose-500/30 transition-all duration-300 group cursor-pointer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="p-3 rounded-xl bg-rose-500/10 text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-all duration-300">
+                      <Heart size={24} />
+                    </div>
+                    <span className="text-white font-bold">Saved Trips</span>
+                  </motion.div>
+                </Link>
+                <Link to="/my-journeys">
+                  <motion.div
+                    className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:border-blue-500/30 transition-all duration-300 group cursor-pointer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300">
+                      <Plane size={24} />
+                    </div>
+                    <span className="text-white font-bold">My Journeys</span>
+                  </motion.div>
+                </Link>
+              </div>
+            )}
           </motion.div>
         </motion.div>
       </main>

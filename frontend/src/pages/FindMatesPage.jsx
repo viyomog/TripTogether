@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
+import { UserContext } from "../context/userContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin,
@@ -7,7 +8,7 @@ import {
   UserPlus,
   Search,
   Filter,
-  MessageCircle,
+  MessageSquare,
   Star,
   Users,
   Loader2,
@@ -15,6 +16,7 @@ import {
 import Navbar from "../components/Navbar";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -34,6 +36,7 @@ const itemVariants = {
 };
 
 const FindMatesPage = () => {
+  const { user, setUser } = useContext(UserContext); // Get 'user' to check current user ID
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -43,6 +46,7 @@ const FindMatesPage = () => {
   const [selectedStyle, setSelectedStyle] = useState("all");
   const [selectedGender, setSelectedGender] = useState("all");
   const [followedUsers, setFollowedUsers] = useState(new Set());
+  const navigate = useNavigate();
 
   const observer = useRef();
   const lastUserElementRef = useCallback(
@@ -76,12 +80,29 @@ const FindMatesPage = () => {
 
       const data = response.data;
       if (data.users) {
+        // Update users list
         if (pageNum === 1) {
           setUsers(data.users);
         } else {
           setUsers((prev) => [...prev, ...data.users]);
         }
         setHasMore(data.hasMore);
+
+        // Sync follow status: Check which of these users are followed by the logged-in user
+        if (user && user._id) {
+          const currentlyFollowed = new Set();
+          data.users.forEach((u) => {
+            if (u.followers && u.followers.includes(user._id)) {
+              currentlyFollowed.add(u._id);
+            }
+          });
+          
+          setFollowedUsers((prev) => {
+            const next = new Set(prev);
+            currentlyFollowed.forEach(id => next.add(id));
+            return next;
+          });
+        }
       } else {
         setHasMore(false);
       }
@@ -92,7 +113,7 @@ const FindMatesPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]); // Add 'user' as dependency to re-check when user context is ready
 
   // Reset and fetch when search query changes
   useEffect(() => {
@@ -107,22 +128,59 @@ const FindMatesPage = () => {
     }
   }, [page, searchQuery, fetchUsers]);
 
-  const handleFollow = (userId) => {
-    setFollowedUsers((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(userId)) {
-        newSet.delete(userId);
-        toast.success("Unfollowed!", {
-          style: { background: "#321B22", color: "#fff", borderRadius: "12px" },
-        });
-      } else {
-        newSet.add(userId);
-        toast.success("Following! You'll see their travel updates.", {
-          style: { background: "#321B22", color: "#fff", borderRadius: "12px" },
+  const handleFollow = async (userId) => {
+    try {
+      const response = await axios.post(
+        `http://localhost:5000/api/user-profile/follow-user`,
+        { targetUserId: userId },
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
+        // Update local UI state
+        setFollowedUsers((prev) => {
+          const newSet = new Set(prev);
+          const isFollowing = newSet.has(userId);
+          if (isFollowing) {
+            newSet.delete(userId);
+            toast.success("Unfollowed successfully", {
+              style: {
+                background: "#321B22",
+                color: "#fff",
+                borderRadius: "12px",
+                fontSize: "12px",
+              },
+            });
+          } else {
+            newSet.add(userId);
+            toast.success("Started following!", {
+              style: {
+                background: "#321B22",
+                color: "#fff",
+                borderRadius: "12px",
+                fontSize: "12px",
+              },
+            });
+          }
+
+          // Update global UserContext to sync Profile page
+          setUser((prevUser) => {
+            if (!prevUser) return null;
+            const updatedFollowing = isFollowing
+              ? prevUser.following.filter((id) => id !== userId)
+              : [...prevUser.following, userId];
+            return { ...prevUser, following: updatedFollowing };
+          });
+
+          return newSet;
         });
       }
-      return newSet;
-    });
+    } catch (error) {
+      console.error("Follow error:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to update follow status"
+      );
+    }
   };
 
   return (
@@ -232,13 +290,13 @@ const FindMatesPage = () => {
             if (users.length === index + 1) {
               return (
                 <motion.div ref={lastUserElementRef} key={user._id} variants={itemVariants}>
-                  <UserCard user={user} handleFollow={handleFollow} followedUsers={followedUsers} />
+                  <UserCard user={user} handleFollow={handleFollow} followedUsers={followedUsers} navigate={navigate} />
                 </motion.div>
               );
             } else {
               return (
                 <motion.div key={user._id} variants={itemVariants}>
-                  <UserCard user={user} handleFollow={handleFollow} followedUsers={followedUsers} />
+                  <UserCard user={user} handleFollow={handleFollow} followedUsers={followedUsers} navigate={navigate} />
                 </motion.div>
               );
             }
@@ -271,8 +329,11 @@ const FindMatesPage = () => {
   );
 };
 
-const UserCard = ({ user, handleFollow, followedUsers }) => (
-  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg hover:border-rose-500/30 hover:bg-white/[0.07] transition-all duration-300 group relative overflow-hidden">
+const UserCard = ({ user, handleFollow, followedUsers, navigate }) => (
+  <div 
+    onClick={() => navigate(`/profile/${user.username}`)}
+    className="flex items-center gap-3 p-3 rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg hover:border-rose-500/30 hover:bg-white/[0.07] transition-all duration-300 group relative overflow-hidden cursor-pointer"
+  >
     {/* Profile Pic */}
     <div className="relative shrink-0">
       <img
@@ -299,7 +360,10 @@ const UserCard = ({ user, handleFollow, followedUsers }) => (
     {/* Actions */}
     <div className="flex gap-1.5 shrink-0">
       <button
-        onClick={() => handleFollow(user._id)}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleFollow(user._id);
+        }}
         className={`p-2 rounded-lg transition-all flex items-center justify-center ${
           followedUsers.has(user._id)
             ? "bg-rose-500/20 text-rose-400 border border-rose-500/20"
@@ -310,10 +374,13 @@ const UserCard = ({ user, handleFollow, followedUsers }) => (
         <UserPlus size={14} />
       </button>
       <button
-        onClick={() => toast("Messaging coming soon!", { style: { background: "#321B22", color: "#fff", fontSize: "12px" } })}
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate("/chat");
+        }}
         className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all shadow-sm"
       >
-        <MessageCircle size={14} />
+        <MessageSquare size={14} />
       </button>
     </div>
   </div>

@@ -1,0 +1,162 @@
+.following-container {
+  background: #0f172a;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  color: #e2e8f0;
+  font-family: 'Inter', sans-serif;
+}
+
+.following-bg-blob {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.blob-1 {
+  top: -10%;
+  left: -10%;
+}
+
+.blob-2 {
+  bottom: -10%;
+  right: -10%;
+  background: rgba(236, 72, 153, 0.08);
+}
+
+.following-content {
+  position: relative;
+  z-index: 10;
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 90px 20px 40px;
+}
+
+.following-header {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.following-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #3b82f6;
+  background: linear-gradient(to right, #3b82f6, #60a5fa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 3px;
+}
+
+.following-subtitle {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.following-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.following-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  cursor: pointer;
+}
+
+.following-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: scale(1.01);
+  box-shadow: 0 15px 30px -12px rgba(0, 0, 0, 0.3);
+}
+
+.following-avatar-wrapper {
+  position: relative;
+}
+
+.following-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transform: rotate(-2deg);
+  transition: all 0.3s ease;
+}
+
+.following-card:hover .following-avatar {
+  transform: rotate(0deg) scale(1.1);
+  border-color: #3b82f6;
+}
+
+.following-info {
+  flex: 1;
+}
+
+.following-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.following-username {
+  font-size: 0.9rem;
+  color: #3b82f6;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.unfollow-btn {
+  background: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.unfollow-btn:hover {
+  background: #f43f5e;
+  color: #fff;
+  border-color: #f43f5e;
+  transform: translateY(-2px);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.following-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.following-search-container {
+  margin-top: 8px !important;
+}
+
+.following-search-input {
+  padding: 10px 16px 10px 44px !important;
+  border-radius: 12px !important;
+}

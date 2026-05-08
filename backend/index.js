@@ -6,10 +6,12 @@ const cookieParser = require("cookie-parser");
 const colors = require("colors");
 const bodyParser = require("body-parser");
 
+const { app, server } = require("./socket/socket");
+
 const authRoutes = require('./routes/authRoutes');
 const userProfileRoutes = require('./routes/userProfileRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
-const app = express();
 dotenv.config();
 
 app.use(express.json({ limit: "10mb" }));
@@ -44,7 +46,8 @@ app.get("/api/health", (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/user-profile', userProfileRoutes);
+app.use('/api/chat', chatRoutes);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`.blue);
 });
