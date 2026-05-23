@@ -33,6 +33,8 @@ import { CallProvider } from "./context/CallContext";
 import { requestForToken, onMessageListener } from "./firebase";
 import toast from "react-hot-toast";
 import "./App.css";
+import CityInfoPage from "./pages/CityInfoPage";
+import JourneyPlanner from "./pages/JourneyPlanner";
 
 const routeOrder = ["/", "/contact", "/faqs", "/mates", "/login"];
 
@@ -259,6 +261,29 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/cityInfo/:cityName"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <CityInfoPage />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/journey-planner"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <JourneyPlanner />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/chat"
           element={
