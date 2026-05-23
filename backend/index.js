@@ -11,6 +11,7 @@ const { app, server } = require("./socket/socket");
 const authRoutes = require('./routes/authRoutes');
 const userProfileRoutes = require('./routes/userProfileRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const cityRoutes = require('./routes/cityRoutes');
 
 dotenv.config();
 
@@ -221,6 +222,7 @@ app.get("/", (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/user-profile', userProfileRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/city', cityRoutes);
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`.blue);

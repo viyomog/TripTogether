@@ -82,7 +82,7 @@ const Home = () => {
             transition={{ delay: 0.4, duration: 0.6 }}
           >
             <Link
-              to={user ? "/plan" : "/login"}
+              to={user ? "/journey-planner" : "/login"}
               className="mt-6 inline-block px-6 py-3 bg-rose-500 text-white font-medium rounded-lg hover:bg-rose-600 transition duration-300"
             >
               {user ? "Plan a Journey" : "Get Started"}
